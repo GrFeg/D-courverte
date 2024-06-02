@@ -27,7 +27,7 @@ if os.path.isfile( Path('config.json')):
     ID_JOUEUR_ELNABO = config['ID_JOUEUR_ELNABO']
     ID_BOT = config['ID_BOT']
 
-    CHEMIN_HISTO_LOGS = 'csv/histo_logs.csv'
+    CHEMIN_HISTO_LOGS = '/csv/histo_logs.csv'
     CHEMIN_RACINE = os.path.dirname(__file__) 
 
 
@@ -207,16 +207,19 @@ def lire_boss(boss):
 
 def ajout_boss(raccourcis_nom, df_global, df_dps, df_gen_group, df_uptime, df_mecanique):
 
-    chemin = '\\log_boss_df\\' + raccourcis_nom
+    chemin = '/log_boss_df/' + raccourcis_nom
     l_chemin = ['\\Stats_global.csv', '\\Stats_DPS.csv', '\\Boons_gen_group.csv', '\\Boons_uptime.csv', '\\mecanique.csv']
-    nom_df = ['df_global', 'df_dps', 'df_gen_group', 'df_boon_uptime' 'df_mecanique']
+    nom_df = ['df_global', 'df_dps', 'df_gen_group', 'df_boon_uptime', 'df_mecanique']
     l_df = [df_global, df_dps, df_gen_group, df_uptime, df_mecanique]
     compteur = 0
+
     #Pour chaque df, met a jour le bon fichier
     for df in l_df:
+        print(l_chemin[compteur])
         #Regarde si le fichier existe
         if os.path.isfile(CHEMIN_RACINE + chemin + l_chemin[compteur]):
             df_fichier = pd.read_csv(CHEMIN_RACINE + chemin + l_chemin[compteur], index_col=None)
+            
         else:
             log(f"Le fichier {l_chemin[compteur]} n'existe pas ! !",2)
             return -1
@@ -229,8 +232,10 @@ def ajout_boss(raccourcis_nom, df_global, df_dps, df_gen_group, df_uptime, df_me
             
 
         df_fichier = pd.concat([df_fichier, df], ignore_index=True)
+        print(df_fichier)
 
-        df_fichier.to_csv(chemin + l_chemin[compteur], index= False)
+        df_fichier.to_csv(CHEMIN_RACINE + chemin + l_chemin[compteur], index= False)
+        print(l_chemin[compteur] + " : OK " + str(compteur))
         setattr(Boss.instances[raccourcis_nom], nom_df[compteur], df_fichier)
         compteur += 1
 
@@ -675,20 +680,20 @@ def init_log():
                     chemin = '\\log_boss_df\\' + boss + "\\" +  key + ".csv"
 
                     try:
-                        df = pd.read_csv(chemin, index_col=False)
+                        df = pd.read_csv(CHEMIN_RACINE + chemin, index_col=False)
                         if key == 'Stats_global':
                             if df['Time Start'].isin([value['Time Start'].iloc[0]]).any():
                                 break
 
 
-                        cols = df.columns  # Utilisez les colonnes du premier DataFrame comme référence ou définissez manuellement
+                        cols = df.columns  
                         value = value.reindex(columns=cols)
                         df = pd.concat([df, value], ignore_index=True)
                         print(f'\rProgression: avant {len(df.columns)} après {len(value.columns)}', end='')
-                        df.to_csv(chemin, index = False)
+                        df.to_csv(CHEMIN_RACINE + chemin, index = False)
                     except:
                         
-                        value.to_csv(chemin, index = False)
+                        value.to_csv(CHEMIN_RACINE + chemin, index = False)
 
                 compteur += 1 
                 
@@ -1240,7 +1245,7 @@ def embed_detail(lien: str):
 
     #Partie statistique classiquo !
     #Définir les propriété de l'embed
-    embed = discord.Embed(title = f"**{pointeur_lien_log + 1} / {len(liens_soiree)} - Détail de {df_global['Boss'].iloc[0]} - Global:**",
+    embed = discord.Embed(title = f"** Détail de {df_global['Boss'].iloc[0]} - Global:**",
                               description = "", 
                               color= couleur)
 
@@ -1278,8 +1283,10 @@ def embed_detail(lien: str):
 def embed_soiree(bouton: int, mecs: bool):
 
     #Récupération des liens stocké dans histo_log.csv et définiton du pointeur.
-    liste_liens_logs = fonction.csv_recup('csv/histo_logs.csv')
-    liens_soiree = liste_liens_logs[0]
+    df_logs = pd.read_csv(CHEMIN_RACINE + CHEMIN_HISTO_LOGS)
+
+    dernier_jour = df_logs['date'].max()
+    liens_soiree = df_logs['logs'][df_logs['date'] == dernier_jour].to_list()
 
 
     #definir le navigateur entre les liens avec limites.
