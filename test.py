@@ -3,6 +3,7 @@ import locale
 import threading
 import schedule # type: ignore
 import time
+import json
 
 #Mettre les jours en français
 locale.setlocale(locale.LC_TIME, 'fr_FR')
