@@ -10,6 +10,7 @@ from discord import app_commands
 import json
 import os
 from pathlib import Path
+import pandas as pd
 
 '''
 Fichier où le Bot discord est initialisé
@@ -31,6 +32,7 @@ if os.path.isfile( Path('config.json')):
 
     CHANNEL_ID_LOGS = 892509041140588581 
     CHEMIN_HISTO_LOGS = 'csv/histo_logs.csv'
+    CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
 
 else:
     log("Fichier config.json introuvable", 3)
@@ -103,7 +105,7 @@ def recherche_embed(csv_embed, embed_id):
     for i, e in enumerate(csv_embed):
         if str(embed_id) in e:
             return i
-    return -1
+    return -1 #Pour erreur
 
 #Récupere les messages dans un canal
 async def recuperation_message(CHANNEL_ID_LOGS, nbr_messages):
@@ -112,16 +114,33 @@ async def recuperation_message(CHANNEL_ID_LOGS, nbr_messages):
     '''
 
     channel = bot.get_channel(CHANNEL_ID_LOGS)
-    global messages_liste
-    messages_liste = []
+    liste_logs = []
+    liste_date = []
+    liste_boss = []
 
+    #Si le canal existe
     if channel:
         async for message in channel.history( limit= nbr_messages ):
+            
+            #Nettoyage
+            message_sep = message.content.lower().split('\n')
+            #Si le message comporte plusieurs liens
+            for message_sep_pars in message_sep:
+                if message_sep_pars[0] == "h":
+                    liste_logs.append( message_sep_pars.split(' ')[0] )
+                    liste_date.append( message_sep_pars.split('-')[1] )
+                    liste_boss.append( message_sep_pars.split('_')[1] )
 
-            messages_liste.append( message.content.split('\n') )
+        #Création du DataFrame
+        dico = {'date' : liste_date,
+                'boss' : liste_boss,
+                'logs' : liste_logs}
+        
+        df_historique_logs = pd.DataFrame(dico)
+        df_historique_logs.to_csv(CHEMIN_RACINE + '/' + CHEMIN_HISTO_LOGS, index= False)
 
-        fonction.csv_actu( CHEMIN_HISTO_LOGS, messages_liste )
-        log("Messages logs recupéré")  
+
+        log("Messages logs recupérés")  
     else:
         log('Canal non trouvé, vérifier "CHANNEL_ID_LOGS" ', 3)
 

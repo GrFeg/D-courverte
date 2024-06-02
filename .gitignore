@@ -4,3 +4,5 @@ log_boss
 log_dps
 csv/
 mon_graphique.png
+__pycache__/
+__pycache__/statistiqueraid.cpython-312.pyc

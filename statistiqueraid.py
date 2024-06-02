@@ -13,9 +13,27 @@ import pandas as pd
 import numpy as np
 import os
 from PIL import Image
+from pathlib import Path
 
 pointeur_lien_log = 0
-CHEMIN_RACINE = os.path.dirname(__file__)  
+
+if os.path.isfile( Path('config.json')):
+    #Récupération des configurations du bot
+    with open('config.json') as config_file:
+        config = json.load(config_file)
+
+    ID_JOUEUR_PIZZABLEU = config['ID_JOUEUR_PIZZABLEU']
+    ID_JOUEUR_CLOUD = config['ID_JOUEUR_CLOUD']
+    ID_JOUEUR_ELNABO = config['ID_JOUEUR_ELNABO']
+    ID_BOT = config['ID_BOT']
+
+    CHEMIN_HISTO_LOGS = 'csv/histo_logs.csv'
+    CHEMIN_RACINE = os.path.dirname(__file__) 
+
+
+else:
+    log("Fichier config.json introuvable", 3)
+
 
 class Joueur:
 
@@ -519,11 +537,11 @@ if 1:
 
 #Joueur de la guilde
 if 1:
-    cloud = Joueur("Cloud","Cloudlloyd.9240")
+    cloud = Joueur("Cloud","Cloudlloyd.9240", ID_JOUEUR_CLOUD)
     tenro = Joueur("Tenro",'Tenro.8107')
-    elnabo = Joueur('Elnabo','Elnabo.2014', 281853299886653441)
+    elnabo = Joueur('Elnabo','Elnabo.2014', ID_JOUEUR_ELNABO)
     drakh = Joueur('Drakh','Drakh.7321')
-    pizza = Joueur('PizzaBleu',"PizzaBleu.7615", 259605122240348160)
+    pizza = Joueur('PizzaBleu',"PizzaBleu.7615", ID_JOUEUR_PIZZABLEU)
     nils = Joueur('Nils','Nils.7289')
     blade = Joueur('BladeLarkin','bladelarkin.5790')
     gon = Joueur('Gon','BigBang.9125')
