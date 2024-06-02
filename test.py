@@ -55,4 +55,4 @@ schedule_thread = threading.Thread(target=executer_schedule)
 schedule_thread.start()
 
 
-trouver_jour('Dimanche 12 juin')
+print('suite du programme ...')
