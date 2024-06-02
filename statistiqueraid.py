@@ -713,7 +713,7 @@ def joli_graphique(df):
     plt.savefig('mon_graphique.png')
     
     # Ouvrir une image existante
-    image = Image.open('\\mon_graphique.png')
+    image = Image.open(CHEMIN_RACINE + '\\mon_graphique.png')
 
     # Définir la zone de rognage (left, top, right, bottom)
     # Par exemple, pour rogner l'image de sorte à enlever 100 pixels de chaque côté
@@ -724,10 +724,10 @@ def joli_graphique(df):
     cropped_image = image.crop((left, top, right, bottom))
 
     # Sauvegarder l'image rognée
-    cropped_image.save('\\mon_graphique.png')
+    cropped_image.save(CHEMIN_RACINE + '\\mon_graphique.png')
 
     # Attachez l'image locale en utilisant un File et ajoutez-la à l'embed
-    file = discord.File("\\mon_graphique.png", filename="mon_graphique.png")
+    file = discord.File(CHEMIN_RACINE + "\\mon_graphique.png", filename="mon_graphique.png")
 
     return file    
 
