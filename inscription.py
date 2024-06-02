@@ -119,7 +119,7 @@ def inscriptions(type_de_sortie = 0,
 async def on_raw_reaction_add(payload, bot):
 
     #Regarde si ce n'est pas le bot qui réagis (on l'exclus)
-    if payload.user_id  == ID_BOT:
+    if payload.user_id  != ID_BOT:
 
         channel = await bot.fetch_channel(payload.channel_id)  
         message = await channel.fetch_message(payload.message_id)  
@@ -131,8 +131,8 @@ async def on_raw_reaction_add(payload, bot):
 
         
         if emoji.name  == "✅" or emoji.name  == "❌":
-            csv_embed = fonction.csv_recup('/csv/varaible.csv')
-            n_embed = main.recherche_embed(csv_embed,message.id)
+            csv_embed = fonction.csv_recup('csv/varaible.csv')
+            n_embed = main.recherche_embed(csv_embed, message.id)
         else:
             return
 
@@ -149,7 +149,7 @@ async def on_raw_reaction_add(payload, bot):
                 csv_embed[n_embed][5] = len(csv_embed[n_embed][4])
 
             #Met a jour le csv
-            fonction.csv_actu('/csv/varaible.csv',csv_embed)
+            fonction.csv_actu('csv/varaible.csv',csv_embed)
             
             await message.edit(embed=inscriptions(csv_embed[n_embed][1],csv_embed[n_embed][2],csv_embed[n_embed][3],csv_embed[n_embed][4],csv_embed[n_embed][5],csv_embed[n_embed][6]))
             await message.remove_reaction(emoji, member)
@@ -168,7 +168,7 @@ async def on_raw_reaction_add(payload, bot):
                 csv_embed[n_embed][4].remove(payload.member.global_name)
                 csv_embed[n_embed][5] = len(csv_embed[n_embed][4])
                 
-            fonction.csv_actu('/csv/varaible.csv',csv_embed)
+            fonction.csv_actu('csv/varaible.csv',csv_embed)
 
             await message.edit(embed=inscriptions(csv_embed[n_embed][1],csv_embed[n_embed][2],csv_embed[n_embed][3],csv_embed[n_embed][4],csv_embed[n_embed][5],csv_embed[n_embed][6]))
             await message.remove_reaction(emoji, member)

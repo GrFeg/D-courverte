@@ -1,6 +1,7 @@
 import discord
 #import tombola
 import statistiqueraid 
+import inscription
 import commande
 from fonction import log
 import fonction
@@ -30,7 +31,7 @@ if os.path.isfile( Path('config.json')):
 
     CHANNEL_ID_LOGS = 892509041140588581 
     CHEMIN_HISTO_LOGS = 'csv/histo_logs.csv'
-    
+
 else:
     log("Fichier config.json introuvable", 3)
 
