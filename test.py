@@ -13,7 +13,13 @@ nom_du_jour = date_du_jour.strftime("%A")
 print(date_du_jour.day)
 
 
-def trouver_jour(date):
+def trouver_jour(date: str):
+    '''
+    Fonction qui a pour but de trouver dans un string le jour de la semaine entrée par un utilisateur et en ressort le delta entre
+    le jour entrée et le jour actuelle.
+
+    return delta: int
+    '''
     liste_jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
     date = date.lower().split()
 
@@ -21,12 +27,17 @@ def trouver_jour(date):
         print(date[0])
 
         if liste_jours.index(nom_du_jour) < liste_jours.index(date[0]):
+            delta = liste_jours.index(date[0]) - liste_jours.index(nom_du_jour)
             print( liste_jours.index(date[0]) - liste_jours.index(nom_du_jour) )
+            return delta
         else:
             print('Jour de la semaine choisit est déjà passé !')
     
     else:
         print('Jour de la semaine non reconnu')
+    
+    return -1
+
 
 
 #Définitions de schedule pour qu'il démarre a tel heure et execute tel fonction.
