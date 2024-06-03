@@ -146,7 +146,12 @@ class Boss:
     
     #Fonction pour savoir si un combat existe dans l'instance du boss ou non, return True or False
     def recherche_combat_dans_Boss(self, date_essais):
-        log(f"Recherche de {date_essais} dans {self.df_global['ID'].values}, {date_essais in self.df_global['ID'].values}",0)
+        #Test si la variable existe
+        if  hasattr(self, 'df_global'):
+            log(f"Recherche de {date_essais} dans {self.df_global['ID'].values}, {date_essais in self.df_global['ID'].values}",0)
+        else:
+            log(f'Fonction recherche_combat_dans_Boss : Erreur, le df est pas chargé ! ! !',2)
+            return -1
 
         if  date_essais in self.df_global['ID'].values:
             return True
@@ -250,6 +255,7 @@ def scrap(lien: str):
     log("Log de raid mis en soup")
     return soup
 
+
 def traiterLogs(lien: str):
         '''
         lien: Lien du raid.
@@ -302,7 +308,7 @@ def traiterLogs(lien: str):
 
         #Partie pour le parse
         id_boss = lien[lien.index('-') +1 : lien.index('_')]
-        boss = Boss.instances[raccourcis_nom].nom_anglais
+        boss = Boss.instances[raccourcis_nom].nom_francais
         if log_boss["cm"]:
             boss += " CM"
         print(data['targets'][0]['hpLeft'])
@@ -551,12 +557,9 @@ if 1:
     gon = Joueur('Gon','BigBang.9125')
     yoda = Joueur('Yoda','Mini maitreyoda.7849')
     elias = Joueur('Ellias','Spongex.7864')
-    lux = Joueur('Luxx','LuXx.9354')
     damien = Joueur('Damien','Escrimeur.4192')
     nachryma = Joueur('Nachryma','ZancrowFT.7319')
-    aniteck = Joueur('Aniteck','Aniteck.6124')
     clement = Joueur('Clement','The Mangoose.7643')
-    isma = Joueur('Isma','Ismael.1427')
 
     log(f"Les objets joueurs sont bien crées, nombre crée: {Joueur.nombre_joueurs}", 1)
 
@@ -1108,11 +1111,11 @@ def affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom: str):
     boon_stats = ""
 
     #Regarde si alac est superieur à 0, si oui enlève le % et convertit en float.
-    if gen_alac != '0':
+    if str(gen_alac) != '0' :
         gen_alac = float(gen_alac[:-1])
         if gen_alac > 20:
            boon = 'Alacrity' 
-    if gen_quick != '0':
+    if str(gen_quick) != '0':
         gen_quick = float(gen_quick[:-1])
         if gen_quick > 20:
             boon = 'Quickness'
@@ -1126,7 +1129,7 @@ def affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom: str):
         for _, ligne in df_dps_glo.iterrows():
             if sub == ligne['Sub Group']:
                 nom_mate = ligne['Name']
-                uptime_boon += float(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0][:-1])
+                uptime_boon += float(str(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0])[:-1])
                 compteur += 1
         uptime_boon = uptime_boon / compteur
 
@@ -1148,7 +1151,7 @@ def affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom: str):
 
     return stats
 
-#####Definition des embed#####
+########## Definition des embed ##########
 
 def embedstatistique():
 
@@ -1305,14 +1308,24 @@ def embed_soiree(bouton: int, mecs: bool):
     except:
         1
 
-    #Traiter le lien
+    #Définition des variables
     raccourcis_nom = lien[lien.index('_') +1 :]
     date_essais = lien[lien.index('-') +1 : lien.index('_')]
+    log_existe = Boss.instances[raccourcis_nom].recherche_combat_dans_Boss(date_essais)
 
+    #Test si l'instance du boss est bien chargé
+    if log_existe == -1:
+        log(f"Embed_soiree : Log de {raccourcis_nom} n'a pas pu être chargé",2)
+        embed = discord.Embed(title       =   f"**{pointeur_lien_log + 1} / {len(liens_soiree)} - Détail de {raccourcis_nom} impossible !**",
+                              description =   "La personne qui a écrit cette ligne n'a pas encore géré ce boss upsi . . .", 
+                              color       =   discord.Colour.red())
+        return embed
+    
     #Test si le log du boss est déjà dans l'instance du boss, sinon le crée
-    if  not Boss.instances[raccourcis_nom].recherche_combat_dans_Boss(date_essais):
+    elif  not log_existe:
         log(f'{date_essais} non trouvé dans df_global de {raccourcis_nom}, démarrage traiterlogs', 0)
         traiterLogs(lien)
+
 
     df_global = Boss.instances[raccourcis_nom].df_global[Boss.instances[raccourcis_nom].df_global['ID'] == date_essais]
     df_dps = Boss.instances[raccourcis_nom].df_dps[Boss.instances[raccourcis_nom].df_dps['ID'] == date_essais]
@@ -1322,9 +1335,9 @@ def embed_soiree(bouton: int, mecs: bool):
     #Partie statistique classiquo !
     if mecs == False:
         #Définir les propriété de l'embed
-        embed = discord.Embed(title = f"**{pointeur_lien_log + 1} / {len(liens_soiree)} - Détail de {df_global['Boss'].iloc[0]} - Global:**",
-                              description = "", 
-                              color= couleur)
+        embed = discord.Embed(title       =   f"**{pointeur_lien_log + 1} / {len(liens_soiree)} - Détail de {df_global['Boss'].iloc[0]} - Global:**",
+                              description =   "", 
+                              color       =   couleur)
 
         embed.add_field(name = "\u200b" , value = "" , inline = False)
         embed.set_thumbnail(url="https://i.ibb.co/rHyn3Qs/sdfsdf.png")
@@ -1338,16 +1351,18 @@ def embed_soiree(bouton: int, mecs: bool):
                 #récupération des variables.
                 nom = joueur.nom_de_compte
                 pseudo = joueur.pseudo
+                compteur += 1
                 mort = ""
-                stats = affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom)
 
                 if df_dps['Time Died'][df_dps['Account'] == nom].iloc[0] == 1:
                     mort = "(mort)"
 
-                    
+                stats = affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom)
+
                 #Le texte de l'embed une fois stats remplis    
                 embed.add_field(name = (f"# {pseudo}: {mort}"), value = stats , inline = True)
-                compteur += 1
+
+                
                 if compteur == 2 or compteur ==  4 or compteur == 6 or compteur == 8:
                     embed.add_field(name="\u200b", value='', inline=False)
 
