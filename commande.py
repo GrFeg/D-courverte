@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 '''
-Fichier ou va se trouver le nom de toutes les commandes
+Fichier ou va se trouver le nom de toutes les commandes du bot Discord
 
 
 '''
@@ -67,7 +67,7 @@ class SlashCommands(commands.Cog):
         if file != -1:
             await interaction.response.send_message(embed=embed, file=file, ephemeral=False)
         else:
-            await interaction.response.send_message("C'est trop dur, j'ai pas réussis :(")
+            await interaction.response.send_message(embed=embed)
 
 
     #Commande soiree

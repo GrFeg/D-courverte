@@ -30,7 +30,6 @@ if os.path.isfile( Path('config.json')):
     CHEMIN_HISTO_LOGS = '/csv/histo_logs.csv'
     CHEMIN_RACINE = os.path.dirname(__file__) 
 
-
 else:
     log("Fichier config.json introuvable", 3)
 
@@ -43,7 +42,7 @@ class Joueur:
     nombre_joueurs = 0
     instances = {}
 
-    def __init__(self, pseudo, nom_de_compte, id_discord = 0):
+    def __init__(self, pseudo, nom_de_compte, id_discord = -1):
         
         #Définition des variables du JOUEUR
         self.pseudo = pseudo
@@ -1386,11 +1385,26 @@ def embed_soiree(bouton: int, mecs: bool):
 
 def embed_role(joueur, boss):
 
+    graphique, taille = 0,0
     for nom in Joueur.instances.values():
         if nom.id_discord == joueur:
             graphique, taille = quel_role_sur_quel_boss(boss,nom.nom_de_compte)
             break
     
+    #Test si l'id discord à été trouvé dans les intances joueurs.
+    if graphique == 0:
+        embed = discord.Embed(title = f"Upsi ", 
+                              description = "Tu n'existes pas, demande à la personne qui a ecrit cette ligne de te rajouter . . .", 
+                              color= discord.Colour.red())
+        return -1, embed
+    
+    #Si le nom du boss n'est pas reconnu
+    if graphique == -1:
+        embed = discord.Embed(title = f"Upsi ", 
+                              description = "Le Boss que tu as entré n'est pas reconnu, essaye d'entrer les mêmes abréviations que sur les liens des logs . . .", 
+                              color= discord.Colour.red())
+        return -1, embed
+
     info = f"Nom :  {nom.nom_de_compte} \n Nombre de try: {taille}"
 
     #Début Embed
