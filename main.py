@@ -97,62 +97,15 @@ def calcul_pourcentage(csv_embed: list):
     
     return vote_1p, vote_2p
 
-#Recherche si l'id d'un embed existe
-def recherche_embed(csv_embed, embed_id):
-    '''
-    Recherche si l'id d'un embed est dans la variable d'un csv sous forme de liste.
-    Si oui renvoit la ligne, si non renvoit -1
-    '''
-    
-    for i, e in enumerate(csv_embed):
-        if str(embed_id) in e:
-            return i
-    return -1 #Pour erreur
-
-#Récupere les messages dans un canal
-async def recuperation_message(CHANNEL_ID_LOGS, nbr_messages):
-    '''
-    Fonction qui permet de récuperer n nombres de messages dans un canal donné.
-    '''
-
-    channel = bot.get_channel(CHANNEL_ID_LOGS)
-    liste_logs = []
-    liste_date = []
-    liste_boss = []
-
-    #Si le canal existe
-    if channel:
-        async for message in channel.history( limit= nbr_messages ):
-            
-            #Nettoyage
-            message_sep = message.content.lower().split('\n')
-            #Si le message comporte plusieurs liens
-            for message_sep_pars in message_sep:
-                if message_sep_pars[0] == "h":
-                    liste_logs.append( message_sep_pars.split(' ')[0] )
-                    liste_date.append( message_sep_pars.split('-')[1] )
-                    liste_boss.append( message_sep_pars.split('_')[1] )
-
-        #Création du DataFrame
-        dico = {'date' : liste_date,
-                'boss' : liste_boss,
-                'logs' : liste_logs}
-        
-        df_historique_logs = pd.DataFrame(dico)
-        df_historique_logs.to_csv(CHEMIN_RACINE + '/' + CHEMIN_HISTO_LOGS, index= False)
-
-
-        log("Messages logs recupérés")  
-    else:
-        log('Canal non trouvé, vérifier "CHANNEL_ID_LOGS" ', 3)
-
 #Detecte quand le bot a démarré
 @bot.event
 async def on_ready():
 
-    await recuperation_message(CHANNEL_ID_LOGS, 10)
+    await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
     log(f'Le {bot.user.name} est connecté')
     await inscription.purge_event(bot)
+    await inscription.init_schedule_thread(bot)
+    await inscription.recuperation_reaction_off(bot)
 
 
 
@@ -270,7 +223,7 @@ async def on_raw_reaction_add(payload):
         return
     if emoji.name  == "🟩" or emoji.name  == "🟦":
         csv_embed = fonction.csv_recup('csv/varaible.csv')
-        n_embed = recherche_embed(csv_embed,message.id)
+        n_embed = fonction.recherche_embed(csv_embed,message.id)
     else:
         return
 
@@ -305,7 +258,7 @@ async def on_raw_reaction_remove(payload):
     #Récupère le fichier csv et chercher si la réaction mise et sur un embed de vote.
     if emoji.name  == "🟦" or emoji.name  == "🟩":
         csv_embed = fonction.csv_recup('csv/varaible.csv')
-        n_embed = recherche_embed(csv_embed,message.id)
+        n_embed = fonction.recherche_embed(csv_embed,message.id)
     else:
         return
 

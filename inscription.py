@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-
 import fonction
 from fonction import log
 import ast
@@ -13,9 +12,14 @@ import threading
 import schedule # type: ignore
 import time
 import pandas as pd
+import asyncio
 
+"""
+Fichier python qui gère la commande discord /inscription
+Detecte l'ajout d'une réaction au embed inscription déjà crée (par le fichier commande) et met à jour l'embed en fonction.
 
-
+Gère les evenements terminé et les supprime du canal
+"""
 #Fonction setup qui va définir quel type de bot.event sont utilisé dans ce fichier
 async def setup(bot):
 
@@ -29,7 +33,7 @@ async def setup(bot):
         await on_raw_reaction_add(payload, bot)
     bot.add_listener(reaction_add, 'on_raw_reaction_add')
 
-
+#Initialisation des variables
 if os.path.isfile( Path('config.json') ):
     #Récupération des configurations du bot
     with open('config.json') as config_file:
@@ -39,16 +43,16 @@ if os.path.isfile( Path('config.json') ):
     ID_CHANNEL_EVENT = config['ID_CHANNEL_EVENT']
     CHEMIN_EVENEMENT = 'csv/varaible.csv'
     CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
+    HEURE_PURGE = "00:19"
+
+    locale.setlocale(locale.LC_TIME, 'fr_FR')
+
+    date_du_jour = datetime.now()
+    nom_du_jour = date_du_jour.strftime("%A")
 else:
     log("Fichier config.json introuvable", 3)
 
-
-#Mettre les jours en français
-locale.setlocale(locale.LC_TIME, 'fr_FR')
-
-date_du_jour = datetime.now()
-nom_du_jour = date_du_jour.strftime("%A")
-
+#Fonction pour trouver le jour dans une phrase
 def trouver_jour(date: str):
     '''
     Fonction qui a pour but de trouver dans un string le jour de la semaine entrée par un utilisateur et en ressort le delta entre
@@ -60,11 +64,9 @@ def trouver_jour(date: str):
     date = date.lower().split()
 
     if date[0] in liste_jours:
-        print(date[0])
 
         if liste_jours.index(nom_du_jour) <= liste_jours.index(date[0]):
             delta = liste_jours.index(date[0]) - liste_jours.index(nom_du_jour)
-            print( liste_jours.index(date[0]) - liste_jours.index(nom_du_jour) )
             return delta
         else:
             print('Jour de la semaine choisit est déjà passé !')
@@ -75,6 +77,7 @@ def trouver_jour(date: str):
     
     return -1
 
+#Fonction pour supprimer les evenement terminés
 async def purge_event(bot):
     log('Fonction purge_event')
     #Récupère le fichier sous forme de df
@@ -102,15 +105,11 @@ async def purge_event(bot):
                     log('Evenement non trouvé dans le canal, suppression impossible', 2)
                 #Met a 1 la ligne event_terminer
                 df_evenement.at[indexe, "event_terminer"] = 1
-                
+
     #Actualise le csv
     df_evenement.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index= False)
 
     return True
-
-log("yo")
-#Définitions de schedule pour qu'il démarre a tel heure et execute tel fonction.
-schedule.every().day.at("00:01").do(lambda: purge_event())
 
 #Fonction qui va être lancé dans le thread
 def executer_schedule():
@@ -118,11 +117,22 @@ def executer_schedule():
         schedule.run_pending()
         time.sleep(1)
 
-#Création et lancement du thread pour ne pas bloquer le reste du programme.
-#Le code va s'éxécuter en """""""parallele""""""" du reste du code
-schedule_thread = threading.Thread(target=executer_schedule)
-schedule_thread.start()
+#Fonction pour initalisé le thread schedule
+async def init_schedule_thread(bot):
+    #Définitions de schedule pour qu'il démarre a tel heure et execute tel fonction.
+    schedule.every().day.at(HEURE_PURGE).do(lambda: asyncio.run(purge_event(bot)))
+    #Création et lancement du thread pour ne pas bloquer le reste du programme.
+    #Le code va s'éxécuter en """""""parallele""""""" du reste du code
+    schedule_thread = threading.Thread(target=executer_schedule)
+    schedule_thread.start()
+    log(f"Thread mis en place pour la purge_event à {HEURE_PURGE}")
 
+#Fonction pour récupérer les réaction sur les embed lorsque le bot était éteind
+async def recuperation_reaction_off(bot):
+    df_message = await fonction.recuperation_message(bot, ID_CHANNEL_EVENT, 10)
+    print(df_message)
+
+    return True
 
 #Definir l'embed inscription
 def inscriptions(type_de_sortie = 0, 

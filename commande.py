@@ -124,7 +124,7 @@ class SlashCommands(commands.Cog):
         message_vote = await interaction.original_response()
 
 
-        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, type_de_sortie, description, date, [],0,[], 0])
+        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, type_de_sortie, description, date, [],0,[],0,0])
 
         print("embed:",message_vote.id)
 

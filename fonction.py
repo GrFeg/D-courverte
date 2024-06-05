@@ -1,11 +1,16 @@
 from datetime import datetime
 import csv
 import os
+from pathlib import Path
+import json
+import pandas as pd
 
 """
 Fichier python contenant des fonction utilitaires
 
 """
+
+
 def fichier_existe(chemin):
     script_dir = os.path.dirname(__file__)  # Répertoire du script Python
     chemin_dossier = os.path.join(script_dir, chemin)
@@ -35,6 +40,26 @@ def log(message, num = 1):
         print(f"{heure} \033[31mECHEC\033[0m ㅤㅤ{message}")
     elif num == 3:
         print(message)
+
+if os.path.isfile( Path('config.json')):
+    #Récupération des configurations du bot
+    with open('config.json') as config_file:
+        config = json.load(config_file)
+
+    TOKEN = config['TOKEN']
+    ID_JOUEUR_PIZZABLEU = config['ID_JOUEUR_PIZZABLEU']
+    ID_JOUEUR_CLOUD = config['ID_JOUEUR_CLOUD']
+    ID_BOT = config['ID_BOT']
+    ID_BOT_MIOUNE = config['ID_BOT_MIOUNE']
+    ID_GUILD_SERVEUR_INAE = config['ID_GUILD_SERVEUR_INAE']
+    ID_CHANNEL_EVENT = config['ID_CHANNEL_EVENT']
+
+    CHANNEL_ID_LOGS = 892509041140588581 
+    CHEMIN_HISTO_LOGS = 'csv/histo_logs.csv'
+    CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
+
+else:
+    log("Fichier config.json introuvable", 3)
 
 
 def csv_recup(chemin: str):
@@ -109,4 +134,60 @@ def recherche_embed(csv_embed, embed_id):
             return i
     return -1 #Pour erreur
 
+#Récupere les messages dans un canal
+async def recuperation_message(bot, channel_id, nbr_messages, 
+                               save_csv = False, chemin_csv = ""):
+    '''
+    Fonction qui permet de récuperer n nombres de messages dans un canal donné.
+    '''
+
+    channel = bot.get_channel(channel_id)
+
+    #Si le canal existe
+    if channel_id == CHANNEL_ID_LOGS:
+        liste_logs = []
+        liste_date = []
+        liste_boss = []
+
+        async for message in channel.history( limit= nbr_messages ):
+            
+            #Nettoyage
+            message_sep = message.content.lower().split('\n')
+            #Si le message comporte plusieurs liens
+            for message_sep_pars in message_sep:
+                if message_sep_pars[0] == "h":
+                    liste_logs.append( message_sep_pars.split(' ')[0] )
+                    liste_date.append( message_sep_pars.split('-')[1] )
+                    liste_boss.append( message_sep_pars.split('_')[1] )
+
+        #Création du DataFrame
+        dico = {'date' : liste_date,
+                'boss' : liste_boss,
+                'logs' : liste_logs}
+        
+        df_historique_logs = pd.DataFrame(dico)
+
+        if save_csv == True:
+            df_historique_logs.to_csv(CHEMIN_RACINE + '/' + chemin_csv, index= False)
+
+
+        log("Messages logs recupérés")  
+        return df_historique_logs
+    
+    elif channel_id == ID_CHANNEL_EVENT:
+        async for message in channel.history( limit= nbr_messages ):
+
+            liste_message = []
+            
+            #Nettoyage
+            message_sep = message.content.lower().split('\n')
+            #Si le message comporte plusieurs liens
+            for message_sep_pars in message_sep:
+                liste_message.append(message_sep_pars)
+
+            dico = {'message' : liste_message} 
+
+            log("Messages evenement recupérés")
+            return pd.DataFrame(dico)
+        
 
