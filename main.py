@@ -11,6 +11,8 @@ import json
 import os
 from pathlib import Path
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 '''
 Fichier où le Bot discord est initialisé
@@ -185,6 +187,34 @@ async def on_message(message : discord.Message):
     #Cloud !
     if id_joueur == ID_JOUEUR_CLOUD:
         await message.add_reaction('💩')
+
+    if "graphq"  in message_contenu:
+        xe = ['N°1','N°2']
+        ye = [78,0]
+        min = [33,0]
+        plt.clf()
+        sns.barplot(x= ye, y = xe, label = "Moyenne")
+        sns.barplot(x= min, y = xe, label = "Min")
+
+        plt.title('Evolution des trys Qadim CM')
+        plt.ylabel('Numéro Tentative')
+        plt.xlabel('Pourcentage de vie (%)')
+        plt.grid(True, axis = 'x')
+        plt.xlim(0, 100)
+
+        
+        plt.savefig('mon_graphique.png')
+
+        embed = discord.Embed(
+            color=discord.Color.blue()  # Vous pouvez choisir la couleur
+        )
+
+        # Attachez l'image locale en utilisant un File et ajoutez-la à l'embed
+        file = discord.File("mon_graphique.png", filename="mon_graphique.png")
+        embed.set_image(url="attachment://mon_graphique.png")
+        
+        # Envoyez l'embed et l'image dans le canal
+        await message.channel.send(file=file, embed=embed)
 
 
 
