@@ -97,3 +97,16 @@ def csv_actu(chemin: str, contenu: list):
 
         log(f"Le fichier {chemin} n'existe pas ! !", 2)
 
+#Recherche si l'id d'un embed existe
+def recherche_embed(csv_embed, embed_id):
+    '''
+    Recherche si l'id d'un embed est dans la variable d'un csv sous forme de liste.
+    Si oui renvoit la ligne, si non renvoit -1
+    '''
+    
+    for i, e in enumerate(csv_embed):
+        if str(embed_id) in e:
+            return i
+    return -1 #Pour erreur
+
+

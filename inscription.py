@@ -1,12 +1,20 @@
 import discord
 from discord.ext import commands
-import main
+
 import fonction
 from fonction import log
 import ast
 import json
 from pathlib import Path
 import os
+from datetime import datetime
+import locale
+import threading
+import schedule # type: ignore
+import time
+import pandas as pd
+
+
 
 #Fonction setup qui va définir quel type de bot.event sont utilisé dans ce fichier
 async def setup(bot):
@@ -28,8 +36,92 @@ if os.path.isfile( Path('config.json') ):
         config = json.load(config_file)
 
     ID_BOT = config['ID_BOT']
+    ID_CHANNEL_EVENT = config['ID_CHANNEL_EVENT']
+    CHEMIN_EVENEMENT = 'csv/varaible.csv'
+    CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
 else:
     log("Fichier config.json introuvable", 3)
+
+
+#Mettre les jours en français
+locale.setlocale(locale.LC_TIME, 'fr_FR')
+
+date_du_jour = datetime.now()
+nom_du_jour = date_du_jour.strftime("%A")
+
+def trouver_jour(date: str):
+    '''
+    Fonction qui a pour but de trouver dans un string le jour de la semaine entrée par un utilisateur et en ressort le delta entre
+    le jour entrée et le jour actuelle.
+
+    return delta: int
+    '''
+    liste_jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
+    date = date.lower().split()
+
+    if date[0] in liste_jours:
+        print(date[0])
+
+        if liste_jours.index(nom_du_jour) <= liste_jours.index(date[0]):
+            delta = liste_jours.index(date[0]) - liste_jours.index(nom_du_jour)
+            print( liste_jours.index(date[0]) - liste_jours.index(nom_du_jour) )
+            return delta
+        else:
+            print('Jour de la semaine choisit est déjà passé !')
+            return -5
+    
+    else:
+        print('Jour de la semaine non reconnu')
+    
+    return -1
+
+async def purge_event(bot):
+    log('Fonction purge_event')
+    #Récupère le fichier sous forme de df
+    df_evenement = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT)
+
+    #Pour chaque ligne du df
+    for indexe, event in df_evenement.iterrows():
+
+        #Si l'évenement est pas terminé
+        if event['event_terminer'] == 0:
+
+            #Test si le jour est passé ou non (renvoit -5 si terminé, -1 en cas de jour non trouvé)
+            jour_restant = trouver_jour(event['date'])
+
+            if jour_restant == -1:
+                continue
+            if jour_restant == -5:
+
+                channel = bot.get_channel( ID_CHANNEL_EVENT )
+                try:
+                    #Supprime le message
+                    message = await channel.fetch_message(event['id'])
+                    await message.delete()
+                except:
+                    log('Evenement non trouvé dans le canal, suppression impossible', 2)
+                #Met a 1 la ligne event_terminer
+                df_evenement.at[indexe, "event_terminer"] = 1
+                
+    #Actualise le csv
+    df_evenement.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index= False)
+
+    return True
+
+log("yo")
+#Définitions de schedule pour qu'il démarre a tel heure et execute tel fonction.
+schedule.every().day.at("00:01").do(lambda: purge_event())
+
+#Fonction qui va être lancé dans le thread
+def executer_schedule():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+#Création et lancement du thread pour ne pas bloquer le reste du programme.
+#Le code va s'éxécuter en """""""parallele""""""" du reste du code
+schedule_thread = threading.Thread(target=executer_schedule)
+schedule_thread.start()
 
 
 #Definir l'embed inscription
@@ -132,7 +224,7 @@ async def on_raw_reaction_add(payload, bot):
         
         if emoji.name  == "✅" or emoji.name  == "❌":
             csv_embed = fonction.csv_recup('csv/varaible.csv')
-            n_embed = main.recherche_embed(csv_embed, message.id)
+            n_embed = fonction.recherche_embed(csv_embed, message.id)
         else:
             return
 

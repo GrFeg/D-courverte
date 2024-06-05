@@ -13,6 +13,7 @@ import locale
 import os
 import json
 from pathlib import Path
+import pandas as pd
 
 '''
 Fichier ou va se trouver le nom de toutes les commandes du bot Discord
@@ -122,7 +123,8 @@ class SlashCommands(commands.Cog):
         await interaction.response.send_message(embed = inscriptions(type_de_sortie, description, date,0,0))
         message_vote = await interaction.original_response()
 
-        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, type_de_sortie, description, date, [],0,[]])
+
+        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, type_de_sortie, description, date, [],0,[], 0])
 
         print("embed:",message_vote.id)
 
@@ -154,7 +156,7 @@ class SlashCommands(commands.Cog):
         await interaction.response.send_message(embed = vote(question, reponse1, reponse2))
         message_vote = await interaction.original_response()
 
-        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, question, reponse1, reponse2,0,0])
+        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, question, reponse1, reponse2,0,0,0])
 
         print("embed:",message_vote.id)
 

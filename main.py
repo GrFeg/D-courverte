@@ -152,6 +152,9 @@ async def on_ready():
 
     await recuperation_message(CHANNEL_ID_LOGS, 10)
     log(f'Le {bot.user.name} est connecté')
+    await inscription.purge_event(bot)
+
+
 
 
 #Detecte un message envoyé
