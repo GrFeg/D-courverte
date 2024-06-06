@@ -149,7 +149,7 @@ def actu_csv_varaible(emoji, nom, id_message):
                 
                 log(f'{nom} ajouté au df à la colonne présent')
 
-                df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT)
+                df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index= False)
             else:
                 log(f'{nom} à déjà voté !', 0)
 
@@ -182,7 +182,7 @@ def actu_csv_varaible(emoji, nom, id_message):
                 
                 log(f'{nom} ajouté au df à la colonne absent')
 
-                df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT)
+                df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index= False)
             else:
                 log(f'{nom} à déjà voté !', 0)
 
@@ -330,7 +330,6 @@ def inscriptions(type_de_sortie = 0,
 
 #Detecte l'ajout d'une réaction
 async def on_raw_reaction_add(payload, bot):
-
     #Regarde si ce n'est pas le bot qui réagis (on l'exclus)
     if payload.user_id  != ID_BOT:
 
@@ -350,44 +349,21 @@ async def on_raw_reaction_add(payload, bot):
             return
 
         #Regarde si la réaction est sur le bonne embed
-        if int(csv_embed[n_embed][0]) == message.id and (emoji.name  == "✅") and n_embed != -1:
-            csv_embed[n_embed][4] = ast.literal_eval(csv_embed[n_embed][4])
-            csv_embed[n_embed][6] = ast.literal_eval(csv_embed[n_embed][6])
+        if int(csv_embed[n_embed][0]) == message.id and n_embed != -1:
+            actu_csv_varaible(emoji.name, payload.member.global_name, message.id)
 
-            if payload.member.global_name in csv_embed[n_embed][6]:
-                csv_embed[n_embed][6].remove(payload.member.global_name)
+            df_message = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
+            ligne = df_message[df_message['id'] == message.id]
 
-            if payload.member.global_name not in csv_embed[n_embed][4]:
-                csv_embed[n_embed][4].append(payload.member.global_name)
-                csv_embed[n_embed][5] = len(csv_embed[n_embed][4])
+            await message.remove_reaction(emoji, member)     
+            await message.edit(embed=inscriptions(ligne['titre'].iloc[0],
+                                                  ligne['description'].iloc[0],
+                                                  ligne['date'].iloc[0],
+                                                  ast.literal_eval(ligne['present'].iloc[0]),
+                                                  ligne['nbr_present'].iloc[0],
+                                                  ast.literal_eval(ligne['absent'].iloc[0])))
 
-            #Met a jour le csv
-            fonction.csv_actu('csv/varaible.csv',csv_embed)
-            
-            await message.edit(embed=inscriptions(csv_embed[n_embed][1],csv_embed[n_embed][2],csv_embed[n_embed][3],csv_embed[n_embed][4],csv_embed[n_embed][5],csv_embed[n_embed][6]))
-            await message.remove_reaction(emoji, member)
-
-            log(f"{payload.member.global_name} inscrit dans {csv_embed[n_embed][1]}", 0)
-
-        #Regarde si la réaction est sur le bonne embed
-        if int(csv_embed[n_embed][0]) == message.id and (emoji.name  == "❌") and n_embed != -1:
-            csv_embed[n_embed][4] = ast.literal_eval(csv_embed[n_embed][4])
-            csv_embed[n_embed][6] = ast.literal_eval(csv_embed[n_embed][6])
-
-            if payload.member.global_name not in csv_embed[n_embed][6]:
-                csv_embed[n_embed][6].append(payload.member.global_name)
-
-            if payload.member.global_name in csv_embed[n_embed][4]:
-                csv_embed[n_embed][4].remove(payload.member.global_name)
-                csv_embed[n_embed][5] = len(csv_embed[n_embed][4])
-                
-            fonction.csv_actu('csv/varaible.csv',csv_embed)
-
-            await message.edit(embed=inscriptions(csv_embed[n_embed][1],csv_embed[n_embed][2],csv_embed[n_embed][3],csv_embed[n_embed][4],csv_embed[n_embed][5],csv_embed[n_embed][6]))
-            await message.remove_reaction(emoji, member)
-
-            log(f"{payload.member.global_name} désinscrit de {csv_embed[n_embed][1]}")
-
+            log(f"{payload.member.global_name} inscrit/désinscrit dans {csv_embed[n_embed][1]}", 0)
 
         print(f"Réaction: {emoji.name} ajouté sur un message par {payload.member.global_name}.")
 
