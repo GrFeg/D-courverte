@@ -189,5 +189,15 @@ async def recuperation_message(bot, channel_id, nbr_messages,
 
             log("Messages evenement recupérés")
             return pd.DataFrame(dico)
-        
+
+async def recuperation_id_message(bot, channel_id, nbr_messages):
+
+    channel = bot.get_channel(channel_id)
+    liste_id_message = []
+    async for message in channel.history( limit= nbr_messages ):
+        liste_id_message.append( message.id )
+
+    dico = {'id_message' : liste_id_message}
+    df = pd.DataFrame(dico)
+    return df    
 

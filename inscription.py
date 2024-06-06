@@ -43,7 +43,7 @@ if os.path.isfile( Path('config.json') ):
     ID_CHANNEL_EVENT = config['ID_CHANNEL_EVENT']
     CHEMIN_EVENEMENT = 'csv/varaible.csv'
     CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
-    HEURE_PURGE = "00:19"
+    HEURE_PURGE = "00:01"
 
     locale.setlocale(locale.LC_TIME, 'fr_FR')
 
@@ -127,10 +127,121 @@ async def init_schedule_thread(bot):
     schedule_thread.start()
     log(f"Thread mis en place pour la purge_event à {HEURE_PURGE}")
 
+#Mettre à jour le csv varaible
+def actu_csv_varaible(emoji, nom, id_message):
+    print(f'Recherche pour: {emoji} mis par {nom}')
+
+    df_event = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT)
+    if not nom == "Régent":
+        if emoji == "✅":
+            print(f'{nom} recherché dans {df_event.loc[df_event['id'] == id_message, 'present'].iloc[0]}')
+
+            #Recherche du nom dans 'present' de la ligne id_message
+            if not df_event.loc[df_event['id'] == id_message, 'present'].str.contains(nom).any():
+
+                present_liste   =   df_event.loc[df_event['id'] == id_message, 'present'].iloc[0]
+                indexe          =   df_event.loc[df_event['id'] == id_message, 'present'].index[0]
+                conver_en_liste =   ast.literal_eval(present_liste)
+                conver_en_liste.append(nom)
+
+                df_event.at[indexe, "present"] = conver_en_liste
+                df_event.at[indexe, "nbr_present"] = df_event.loc[df_event['id'] == id_message, 'nbr_present'].iloc[0] + 1
+                
+                log(f'{nom} ajouté au df à la colonne présent')
+
+                df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT)
+            else:
+                log(f'{nom} à déjà voté !', 0)
+
+            #Recherche du nom dans 'absent' de la ligne id_message
+            if df_event.loc[df_event['id'] == id_message, 'absent'].str.contains(nom).any():
+
+                present_liste   =   df_event.loc[df_event['id'] == id_message, 'absent'].iloc[0]
+                indexe          =   df_event.loc[df_event['id'] == id_message, 'absent'].index[0]
+                conver_en_liste =   ast.literal_eval(present_liste)
+
+                conver_en_liste.remove(nom)
+                df_event.at[indexe, "absent"] = conver_en_liste
+                df_event.at[indexe, "nbr_absent"] = df_event.loc[df_event['id'] == id_message, 'nbr_absent'].iloc[0] - 1
+                
+                log(f'{nom} enlevé au df à la colonne absent')
+
+                df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index = False)
+
+        if emoji == "❌":
+            #Recherche du nom dans 'present' de la ligne id_message
+            if not df_event.loc[df_event['id'] == id_message, 'absent'].str.contains(nom).any():
+
+                present_liste   =   df_event.loc[df_event['id'] == id_message, 'absent'].iloc[0]
+                indexe          =   df_event.loc[df_event['id'] == id_message, 'absent'].index[0]
+                conver_en_liste =   ast.literal_eval(present_liste)
+                conver_en_liste.append(nom)
+
+                df_event.at[indexe, "absent"] = conver_en_liste
+                df_event.at[indexe, "nbr_absent"] = df_event.loc[df_event['id'] == id_message, 'nbr_absent'].iloc[0] + 1
+                
+                log(f'{nom} ajouté au df à la colonne absent')
+
+                df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT)
+            else:
+                log(f'{nom} à déjà voté !', 0)
+
+            #Recherche du nom dans 'absent' de la ligne id_message
+            if df_event.loc[df_event['id'] == id_message, 'present'].str.contains(nom).any():
+
+                present_liste   =   df_event.loc[df_event['id'] == id_message, 'present'].iloc[0]
+                indexe          =   df_event.loc[df_event['id'] == id_message, 'present'].index[0]
+                conver_en_liste =   ast.literal_eval(present_liste)
+
+                conver_en_liste.remove(nom)
+                df_event.at[indexe, "present"]    =  conver_en_liste
+                df_event.at[indexe, "nbr_present"] =  df_event.loc[df_event['id'] == id_message, 'nbr_present'].iloc[0] - 1
+                
+                log(f'{nom} enlevé au df à la colonne present')
+
+                df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index = False)
+
+    else:
+        log(f'{nom} non pris en compte !')
+        return False
+
+
+
+    return True
+
 #Fonction pour récupérer les réaction sur les embed lorsque le bot était éteind
 async def recuperation_reaction_off(bot):
-    df_message = await fonction.recuperation_message(bot, ID_CHANNEL_EVENT, 10)
-    print(df_message)
+    #Recupère les id des messages présent dans le canal evenement
+    df_message = await fonction.recuperation_id_message(bot, ID_CHANNEL_EVENT, 10)
+
+
+    #Pour chaque message présent dans le canal evenement
+    channel = bot.get_channel( ID_CHANNEL_EVENT )
+    for _, ligne in df_message.iterrows():
+        message = await channel.fetch_message( ligne['id_message'] )
+
+        #Pour chaque reaction dans le message
+        for reaction in message.reactions:
+            print('')
+            print(f"Emoji: {reaction.emoji}, Réactions: {reaction.count} pour message {message.id}")
+
+            async for user in reaction.users():
+                if not user.id == ID_BOT:
+
+                    actu_csv_varaible(reaction.emoji, user.global_name, message.id)
+
+                    df_message = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
+                    ligne = df_message[df_message['id'] == message.id]
+                    
+                    await message.remove_reaction(reaction, user)      
+                    await message.edit(embed=inscriptions(ligne['titre'].iloc[0],
+                                                          ligne['description'].iloc[0],
+                                                          ligne['date'].iloc[0],
+                                                          ast.literal_eval(ligne['present'].iloc[0]),
+                                                          ligne['nbr_present'].iloc[0],
+                                                          ast.literal_eval(ligne['absent'].iloc[0])))
+
+
 
     return True
 
