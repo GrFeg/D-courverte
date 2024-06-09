@@ -20,6 +20,7 @@ Detecte l'ajout d'une réaction au embed inscription déjà crée (par le fichie
 
 Gère les evenements terminé et les supprime du canal
 """
+
 #Fonction setup qui va définir quel type de bot.event sont utilisé dans ce fichier
 async def setup(bot):
 
@@ -333,15 +334,17 @@ async def on_raw_reaction_add(payload, bot):
     #Regarde si ce n'est pas le bot qui réagis (on l'exclus)
     if payload.user_id  != ID_BOT:
 
+        #Récupère l'objet canal, message, emoji
         channel = await bot.fetch_channel(payload.channel_id)  
         message = await channel.fetch_message(payload.message_id)  
         emoji = payload.emoji
-
         guild = bot.get_guild(payload.guild_id)  # Récupère l'objet Guild grâce à l'ID de la guilde
+
+        #Si il réussit à trouver la guild
         if guild:
             member = await guild.fetch_member(payload.user_id)
 
-        
+        #Check si l'emote est la coche ou la croix
         if emoji.name  == "✅" or emoji.name  == "❌":
             csv_embed = fonction.csv_recup('csv/varaible.csv')
             n_embed = fonction.recherche_embed(csv_embed, message.id)
@@ -350,11 +353,15 @@ async def on_raw_reaction_add(payload, bot):
 
         #Regarde si la réaction est sur le bonne embed
         if int(csv_embed[n_embed][0]) == message.id and n_embed != -1:
+
+            #Actualise le csv_varaible
             actu_csv_varaible(emoji.name, payload.member.global_name, message.id)
 
+            #Récupère le csv pour l'embed inscriptions
             df_message = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
             ligne = df_message[df_message['id'] == message.id]
-
+            
+            #Supprime la réaction et met à jour l'embed
             await message.remove_reaction(emoji, member)     
             await message.edit(embed=inscriptions(ligne['titre'].iloc[0],
                                                   ligne['description'].iloc[0],
