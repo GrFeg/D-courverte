@@ -145,9 +145,9 @@ async def on_message(message : discord.Message):
         await message.add_reaction('💩')
 
     if "graphq"  in message_contenu:
-        xe = ['N°1','N°2']
-        ye = [78,0]
-        min = [33,0]
+        xe = ['N°1','N°2','N°3']
+        ye = [78,72,0]
+        min = [33,5,0]
         plt.clf()
         sns.barplot(x= ye, y = xe, label = "Moyenne")
         sns.barplot(x= min, y = xe, label = "Min")

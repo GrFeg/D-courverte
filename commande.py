@@ -160,8 +160,8 @@ class SlashCommands(commands.Cog):
 
         print("embed:",message_vote.id)
 
-        await message_vote.add_reaction('1️⃣')
-        await message_vote.add_reaction('2️⃣')
+        await message_vote.add_reaction('🟩')
+        await message_vote.add_reaction('🟦')
     
 
 #Fonction pour synchroniser les commandes avec le fichier main
@@ -176,9 +176,9 @@ def vote(question, reponse1, reponse2):
     embed_vote = discord.Embed(title = "**Vote:**", description = question, color=0x80ff80)
     embed_vote.add_field(name = "\u200b" , value = "" , inline = False)
 
-    embed_vote.add_field(name = "1️⃣ Team verte" , value = f"{reponse1:<10}" , inline = False)
+    embed_vote.add_field(name = "🟩 Team verte" , value = f"{reponse1:<10}" , inline = False)
     embed_vote.add_field(name = "\u200b" , value = "" , inline = False)
-    embed_vote.add_field(name = "2️⃣ : Team Bleu" , value = f"{reponse2:<10}" , inline = False)
+    embed_vote.add_field(name = "🟦 : Team Bleu" , value = f"{reponse2:<10}" , inline = False)
     embed_vote.add_field(name = "\u200b" , value = "⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜" , inline = False)
 
     return embed_vote

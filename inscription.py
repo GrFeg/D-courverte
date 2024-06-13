@@ -18,7 +18,7 @@ import asyncio
 Fichier python qui gère la commande discord /inscription
 Detecte l'ajout d'une réaction au embed inscription déjà crée (par le fichier commande) et met à jour l'embed en fonction.
 
-Gère les evenements terminé et les supprime du canal
+Gère les evenements terminé et les supprime du canal. Récupère les réactgion lorsque le bot est hoprs ligne pour mettre à jour les inscriptions.
 """
 
 #Fonction setup qui va définir quel type de bot.event sont utilisé dans ce fichier
@@ -61,6 +61,7 @@ def trouver_jour(date: str):
 
     return delta: int
     '''
+
     liste_jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
     date = date.lower().split()
 

@@ -185,6 +185,12 @@ class Combat:
         Boss.instances[raccourcis_nom].nbr_combat += 1
         Combat.instances[raccourcis_nom + "_" + str(datetime.strftime(date, '%Y%m%d-%H%M%S'))] = self
 
+
+
+
+
+
+
 #Fonction pour lire tout les csv d'un boss est les stocker
 def lire_boss(boss):
     '''
