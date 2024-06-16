@@ -20,7 +20,7 @@ Fichier où le Bot discord est initialisé
 '''
 
 
-if os.path.isfile( Path('config.json')):
+if os.path.isfile( Path('config.json') ):
     #Récupération des configurations du bot
     with open('config.json') as config_file:
         config = json.load(config_file)
