@@ -14,6 +14,7 @@ import numpy as np
 import os
 from PIL import Image
 from pathlib import Path
+from boss import Boss
 
 
 pointeur_lien_log = 0
@@ -96,81 +97,6 @@ class Joueur:
         return list(Joueur.instances.keys()), list(Joueur.instances.values())
 
     liste_joueurs = classmethod(liste_joueurs)
-
-class Boss:
-    '''
-    Class qui définit tout les boss présent dans le jeu, leurs noms (anglais et français).
-    Stocke tout les Data Frame du boss
-
-    Fonction recherche_combat_dans_Boss: Test si l'ID est dans le df_global -> Renvoit true ou false
-    '''
-
-    instances = {}
-    nbr_boss = 0
-    
-    def __init__(self, nom_francais: str, nom_anglais: str, raccourcis_nom: str):
-
-        self.nom_francais = nom_francais
-        self.nom_anglais = nom_anglais
-        self.raccourcis_nom = raccourcis_nom
-        self.nbr_combat = 0
-
-        df_boss_hebdo = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_BOSS_HEBDO, index_col = 'num_sem')
-
-        try:
-            self.mort_hebdo =  df_boss_hebdo.loc[numero_semaine][raccourcis_nom]
-        except KeyError:
-            log(f"mort_hebdo non pris en charge pour {raccourcis_nom}", 2)
-            self.mort_hebdo = None
-
-
-
-        dico_df = lire_boss(raccourcis_nom)
-        #Test si chaque df existe bien dans le dict et le charge.
-        if type(dico_df) == dict:
-            if 'Stats_global' in dico_df:
-                self.df_global = dico_df['Stats_global']
-            else:
-                log(f'{raccourcis_nom}: Stats_global non trouvé, erreur ! ', 2)
-            
-            if 'Stats_DPS' in dico_df:
-                self.df_dps = dico_df['Stats_DPS']
-            else:
-                log(f'{raccourcis_nom}: Stats_DPS non trouvé, erreur ! ', 2)
-
-            if 'Boons_gen_group' in dico_df:
-                self.df_gen_group = dico_df['Boons_gen_group']
-            else:
-                log(f'{raccourcis_nom}: Boons_gen_group non trouvé, erreur ! ', 2)
-
-            if 'Boons_uptime' in dico_df:
-                self.df_boon_uptime = dico_df['Boons_uptime']
-            else:
-                log(f'{raccourcis_nom}: df_boon_uptime non trouvé, erreur ! ', 2)
-
-            if 'mecanique' in dico_df:
-                self.df_mecanique = dico_df['mecanique']
-            else:
-                log(f'{raccourcis_nom}: mecanique non trouvé, erreur ! ', 2)
-        else:
-            log(f"L'instance de {raccourcis_nom} n'a pas pu charger les df",2)
-
-        Boss.instances[self.raccourcis_nom] = self
-        Boss.nbr_boss += 1
-    
-    #Fonction pour savoir si un combat existe dans l'instance du boss ou non, return True or False
-    def recherche_combat_dans_Boss(self, date_essais):
-        #Test si la variable existe
-        if  hasattr(self, 'df_global'):
-            log(f"Recherche de {date_essais} dans {self.df_global['ID'].values}, {date_essais in self.df_global['ID'].values}",0)
-        else:
-            log(f'Fonction recherche_combat_dans_Boss : Erreur, le df est pas chargé ! ! !',2)
-            return -1
-
-        if  date_essais in self.df_global['ID'].values:
-            return True
-        else:
-            return False
 
 
 #Fonction pour lire tout les csv d'un boss est les stocker
