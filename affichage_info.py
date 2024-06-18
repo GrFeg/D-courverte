@@ -151,7 +151,6 @@ async def actualisation_embed(bot, df_histo_message):
     df_boss_hebdo = ajout_boss_hebdo_via_histo(df_histo_message)
     numero_semaine = int( date_du_jour.strftime('%W') )
 
-
     #Si on est lundi RESET des infos
     if date_du_jour.strftime("%A") == "lundi" : #RESTE A VOIR LA DATE POUR EVITER CONFLIT LE LUNDI SI APRES 21H ! ! ! ! ! ! ! ! !
 
@@ -166,18 +165,16 @@ async def actualisation_embed(bot, df_histo_message):
         }
 
     else:
-         print(df_boss_hebdo)
+         series_semaine = df_boss_hebdo.loc[numero_semaine]
          dico_info_raid_done = {
-            "W1" : [df_boss_hebdo.iloc[numero_semaine]['vg'], False, False],
-            "W2" : [False, False, False],
-            "W3" : [False, False, False],
-            "W4" : [False, False, False, False],
-            "W5" : [False, False, False],
-            "W6" : [False, False, False],
-            "W7" : [False, False, False],
+            "W1" : [series_semaine['vg'], series_semaine['gors'], series_semaine['sab']],
+            "W2" : [series_semaine['slot'], series_semaine['trio'], series_semaine['mat']],
+            "W3" : [series_semaine['esc'], series_semaine['kc'], series_semaine['xera']],
+            "W4" : [series_semaine['cairn'], series_semaine['mo'], series_semaine['sam'], series_semaine['dei']],
+            "W5" : [series_semaine['sh'], series_semaine['river'], series_semaine['dhuum']],
+            "W6" : [series_semaine['ca'], series_semaine['twins'], series_semaine['qadim']],
+            "W7" : [series_semaine['sabir'], series_semaine['adina'], series_semaine['qpeer']],
         }
-         print(dico_info_raid_done)
-
 
     embed = embed_quel_raids(dico_info_raid_done)
 
