@@ -155,10 +155,11 @@ async def recuperation_message(bot, channel_id, nbr_messages,
             message_sep = message.content.lower().split('\n')
             #Si le message comporte plusieurs liens
             for message_sep_pars in message_sep:
-                if message_sep_pars[0] == "h":
-                    liste_logs.append( message_sep_pars.split(' ')[0] )
-                    liste_date.append( message_sep_pars.split('-')[1] )
-                    liste_boss.append( message_sep_pars.split('_')[1] )
+                if not message_sep_pars == "":
+                    if message_sep_pars[0] == "h":
+                        liste_logs.append( message_sep_pars.split(' ')[0] )
+                        liste_date.append( message_sep_pars.split('-')[1] )
+                        liste_boss.append( message_sep_pars.split('_')[1] )
 
         #Création du DataFrame
         dico = {'date' : liste_date,
