@@ -15,6 +15,7 @@ import os
 from PIL import Image
 from pathlib import Path
 
+
 pointeur_lien_log = 0
 
 if os.path.isfile( Path('config.json')):
@@ -28,7 +29,11 @@ if os.path.isfile( Path('config.json')):
     ID_BOT = config['ID_BOT']
 
     CHEMIN_HISTO_LOGS = '/csv/histo_logs.csv'
+    CHEMIN_BOSS_HEBDO = 'csv/boss_done_hebdo.csv'
     CHEMIN_RACINE = os.path.dirname(__file__) 
+
+    date_du_jour = datetime.now()
+    numero_semaine = int( date_du_jour.strftime('%W') )
 
 else:
     log("Fichier config.json introuvable", 3)
@@ -110,8 +115,17 @@ class Boss:
         self.raccourcis_nom = raccourcis_nom
         self.nbr_combat = 0
 
-        dico_df = lire_boss(raccourcis_nom)
+        df_boss_hebdo = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_BOSS_HEBDO, index_col = 'num_sem')
 
+        try:
+            self.mort_hebdo =  df_boss_hebdo.loc[numero_semaine][raccourcis_nom]
+        except KeyError:
+            log(f"mort_hebdo non pris en charge pour {raccourcis_nom}", 2)
+            self.mort_hebdo = None
+
+
+
+        dico_df = lire_boss(raccourcis_nom)
         #Test si chaque df existe bien dans le dict et le charge.
         if type(dico_df) == dict:
             if 'Stats_global' in dico_df:
@@ -157,38 +171,6 @@ class Boss:
             return True
         else:
             return False
-
-class Combat:
-    """
-    Class qui définit touts les Combat de raids que les InAe ont fait !
-    """
-    instances = {}
-
-    def __init__(self, date: datetime, raccourcis_nom, duree: int, succes: bool, cm: bool, pourcentage: float, log, nom_joueur, nom_mecanique, 
-                 mecanique, lien: str):
-        
-        nom_donnee = ['date',"racourcis_nom", 'duree','succes','cm','pourcentage','mecanique_nom','nom_joueurs','mecaniques','lien'] 
-
-        self.boss = Boss.instances[raccourcis_nom].raccourcis_nom
-        self.date = date
-        self.duree = duree #Durée en secondes
-        self.temps = str(int(self.duree) // 60) + "m " + str(int(self.duree) % 60) + "s" #Affichage sympathique pour la durée
-        self.succes = succes
-        self.cm = cm
-        self.pourcentage = pourcentage
-        self.nom_joueur = nom_joueur
-        self.stats = log
-        self.nom_mecanique = nom_mecanique
-        self.mecanique = mecanique
-        self.lien = lien
-
-        Boss.instances[raccourcis_nom].nbr_combat += 1
-        Combat.instances[raccourcis_nom + "_" + str(datetime.strftime(date, '%Y%m%d-%H%M%S'))] = self
-
-
-
-
-
 
 
 #Fonction pour lire tout les csv d'un boss est les stocker

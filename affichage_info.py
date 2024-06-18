@@ -24,7 +24,7 @@ DICO_EQUIVALENT_ABREGEE_NOM = {
         "sab" : "Sabetha",
         "sloth" : "Slothasor",
         "trio" : "Trio",
-        "mat" : "Mathias",
+        "matt" : "Mathias",
         "esc" : "Escorte",
         "kc" : "Groseval",
         "xera" : "Xera",
@@ -48,13 +48,6 @@ if os.path.isfile( Path('config.json') ):
     #Récupération des configurations du bot
     with open('config.json') as config_file:
         config = json.load(config_file)
-
-    TOKEN = config['TOKEN']
-    ID_JOUEUR_PIZZABLEU = config['ID_JOUEUR_PIZZABLEU']
-    ID_JOUEUR_CLOUD = config['ID_JOUEUR_CLOUD']
-    ID_BOT = config['ID_BOT']
-    ID_BOT_MIOUNE = config['ID_BOT_MIOUNE']
-    ID_GUILD_SERVEUR_INAE = config['ID_GUILD_SERVEUR_INAE']
 
     CHANNEL_ID_LOGS = 892509041140588581 
     ID_CHANNEL_TEST = config['ID_CHANNEL_TEST']
@@ -85,7 +78,6 @@ def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
              
              #Si le boss existe dans la liste des abréviations
              if ligne['boss'] in DICO_EQUIVALENT_ABREGEE_NOM:
-                 print('Jackpot pour ', ligne['boss'])
 
                  #MANQUE A VERIFIER SI LE BOSS EST BIEN TOMBE ! ! ! ! ! ! ! 
 
@@ -97,7 +89,6 @@ def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
     
     #Remplace toutess les valeurs nulle par False
     df_boss_hebdo = df_boss_hebdo.fillna("False")
-    print(df_boss_hebdo)
     
     #Enregistre le df
     df_boss_hebdo.to_csv(CHEMIN_RACINE + "/" + CHEMIN_BOSS_HEBDO)
@@ -168,7 +159,7 @@ async def actualisation_embed(bot, df_histo_message):
          series_semaine = df_boss_hebdo.loc[numero_semaine]
          dico_info_raid_done = {
             "W1" : [series_semaine['vg'], series_semaine['gors'], series_semaine['sab']],
-            "W2" : [series_semaine['slot'], series_semaine['trio'], series_semaine['mat']],
+            "W2" : [series_semaine['sloth'], series_semaine['trio'], series_semaine['matt']],
             "W3" : [series_semaine['esc'], series_semaine['kc'], series_semaine['xera']],
             "W4" : [series_semaine['cairn'], series_semaine['mo'], series_semaine['sam'], series_semaine['dei']],
             "W5" : [series_semaine['sh'], series_semaine['river'], series_semaine['dhuum']],
@@ -180,7 +171,7 @@ async def actualisation_embed(bot, df_histo_message):
 
     try:
         channel = bot.get_channel(ID_CHANNEL_TEST)
-        message = await channel.fetch_message( 1252744415370285056 )
+        message = await channel.fetch_message( 1252744415370285056 ) #Message embed déjà envoyé A automatiser ! ! ! ! !
         message_trouve = True
     except:
         log("Fonction actualisation_embed : EMBED ou CHANNEL non trouvé ! ! !", 2)
