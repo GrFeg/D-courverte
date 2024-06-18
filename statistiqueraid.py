@@ -570,7 +570,7 @@ if 1:
     log(f"Les objets joueurs sont bien crées, nombre crée: {Joueur.nombre_joueurs}", 1)
 
 #Test
-traiterLogs('https://dps.report/eZsa-20240506-213434_sab')
+#traiterLogs('https://dps.report/eZsa-20240506-213434_sab')
 
 
 #Fonction qui va s'occuper de tout les raid parse par le logiciel.

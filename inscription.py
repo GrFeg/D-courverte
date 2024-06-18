@@ -224,11 +224,11 @@ async def recuperation_reaction_off(bot):
 
         #Pour chaque reaction dans le message
         for reaction in message.reactions:
-            print('')
-            print(f"Emoji: {reaction.emoji}, Réactions: {reaction.count} pour message {message.id}")
 
             async for user in reaction.users():
                 if not user.id == ID_BOT:
+                    print('')
+                    print(f"Emoji: {reaction.emoji}, Réactions: {reaction.count} pour message {message.id}")
 
                     actu_csv_varaible(reaction.emoji, user.global_name, message.id)
 

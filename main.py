@@ -13,6 +13,7 @@ from pathlib import Path
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import affichage_info
 
 '''
 Fichier où le Bot discord est initialisé
@@ -100,12 +101,16 @@ def calcul_pourcentage(csv_embed: list):
 #Detecte quand le bot a démarré
 @bot.event
 async def on_ready():
-
-    await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
     log(f'Le {bot.user.name} est connecté')
+
+    df_histo_message = await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
+
     await inscription.purge_event(bot)
     await inscription.init_schedule_thread(bot)
     await inscription.recuperation_reaction_off(bot)
+
+    log(f'Début récap raid', 0)
+    await affichage_info.actualisation_embed(bot, df_histo_message)
 
 
 

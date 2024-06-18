@@ -53,6 +53,7 @@ if os.path.isfile( Path('config.json')):
     ID_BOT_MIOUNE = config['ID_BOT_MIOUNE']
     ID_GUILD_SERVEUR_INAE = config['ID_GUILD_SERVEUR_INAE']
     ID_CHANNEL_EVENT = config['ID_CHANNEL_EVENT']
+    ID_CHANNEL_TEST = config['ID_CHANNEL_TEST']
 
     CHANNEL_ID_LOGS = 892509041140588581 
     CHEMIN_HISTO_LOGS = 'csv/histo_logs.csv'
@@ -175,7 +176,7 @@ async def recuperation_message(bot, channel_id, nbr_messages,
         log("Messages logs recupérés")  
         return df_historique_logs
     
-    elif channel_id == ID_CHANNEL_EVENT:
+    elif channel_id == ID_CHANNEL_EVENT or channel_id == ID_CHANNEL_TEST:
         async for message in channel.history( limit= nbr_messages ):
 
             liste_message = []
@@ -200,5 +201,5 @@ async def recuperation_id_message(bot, channel_id, nbr_messages):
 
     dico = {'id_message' : liste_id_message}
     df = pd.DataFrame(dico)
-    return df    
+    return df   
 
