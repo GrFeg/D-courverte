@@ -115,7 +115,7 @@ class Boss:
         if  hasattr(self, 'df_global'):
             log(f"Recherche de {date_essais} dans {self.df_global['ID'].values}, {date_essais in self.df_global['ID'].values}",0)
         else:
-            log(f'Fonction recherche_combat_dans_Boss : Erreur, le df est pas chargé ! ! !',2)
+            log(f'Fonction recherche_combat_dans_Boss : Erreur, le df n\'est pas chargé ! ! !',2)
             return -1
 
         if  date_essais in self.df_global['ID'].values:

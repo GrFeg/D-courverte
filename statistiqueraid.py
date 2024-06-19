@@ -1181,44 +1181,66 @@ def embed_detail(lien: str):
     raccourcis_nom = lien[lien.index('_') +1 :]
     date_essais = lien[lien.index('-') +1 : lien.index('_')]
 
+    #Récupération de l'instance Boss pour le boss en question (raccourcis_nom)
+    instance_boss = Boss.instances[raccourcis_nom]
+    instance_boss: Type[Boss]
+
     #Test si le log du boss est déjà dans l'instance du boss, sinon le crée
-    if  not Boss.instances[raccourcis_nom].recherche_combat_dans_Boss(date_essais):
+    if  not instance_boss.recherche_combat_dans_Boss(date_essais):
         log(f'{date_essais} non trouvé dans df_global de {raccourcis_nom}, démarrage traiterlogs', 0)
         traiterLogs(lien)
 
-    df_global = Boss.instances[raccourcis_nom].df_global[Boss.instances[raccourcis_nom].df_global['ID'] == date_essais]
-    df_dps = Boss.instances[raccourcis_nom].df_dps[Boss.instances[raccourcis_nom].df_dps['ID'] == date_essais]
+    #Récupération du df_global pour la date du lien
+    df_global = instance_boss.df_global[instance_boss.df_global['ID'] == date_essais]
+    df_global : pd.DataFrame
 
-    stats_global, couleur = affichage_stats_glo(df_global)
+    #Récupération du df_dps pour la date du lien
+    df_dps = instance_boss.df_dps[instance_boss.df_dps['ID'] == date_essais]
+    df_dps : pd.DataFrame
 
-    #Partie statistique classiquo !
+    #Crée l'affichage utilisé dans l'embed pour la partie global
+    stats_global, couleur = affichage_stats_glo( df_global )
+
     #Définir les propriété de l'embed
-    embed = discord.Embed(title = f"** Détail de {df_global['Boss'].iloc[0]} - Global:**",
-                              description = "", 
-                              color= couleur)
+    embed = discord.Embed( title = f"** Détail de {df_global['Boss'].iloc[0]} - Global:**",
+                           description = "", 
+                           color= couleur
+                         )
+    embed.set_thumbnail(url="https://i.ibb.co/rHyn3Qs/sdfsdf.png") #Image en haut à droite
 
+    #Partie Global de l'embed
     embed.add_field(name = "\u200b" , value = "" , inline = False)
-    embed.set_thumbnail(url="https://i.ibb.co/rHyn3Qs/sdfsdf.png")
     embed.add_field(name="Satistique global:", value= stats_global, inline=False)
     embed.add_field(name="\u200b", value='', inline=False)
+
+    #Partie propre à chaque joueur de l'embed
     compteur = 0 
 
-    #Parcours tout les jouers de la guilde
+    #Parcours tout les joueurs de la guilde
     for joueur in list(Joueur.instances.values()):
+        joueur : Type[Joueur]
+
+        #Regarde si le joueur récupéré à bien participé a ce raid
         if joueur.nom_de_compte in df_dps['Account'].values:
-            #récupération des variables.
+
+            #Récupération des information du joueurs
             nom = joueur.nom_de_compte
             pseudo = joueur.pseudo
-            mort = ""
+            compteur += 1
+
+            #Crée l'affichage utilisé dans l'embed pour la partie joueur
             stats = affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom)
 
+            #Regarde si le joueur est mort
             if df_dps['Time Died'][df_dps['Account'] == nom].iloc[0] == 1:
                 mort = "(mort)"
+            else:
+                mort = ""
 
-                    
-            #Le texte de l'embed une fois stats remplis    
+            #Ajoute le titre et l'affichage de stats du joueur à l'embed   
             embed.add_field(name = (f"# {pseudo}: {mort}"), value = stats , inline = True)
-            compteur += 1
+
+            #Permet le saut de ligne tout les deux joueurs entré dans l'embed
             if compteur == 2 or compteur ==  4 or compteur == 6 or compteur == 8:
                 embed.add_field(name="\u200b", value='', inline=False)
 
