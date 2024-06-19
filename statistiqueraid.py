@@ -15,6 +15,7 @@ import os
 from PIL import Image
 from pathlib import Path
 from boss import Boss
+from typing import Type
 
 
 pointeur_lien_log = 0
@@ -1000,19 +1001,30 @@ def affichage_stats_glo(df_global):
     return stats_global, couleur
 
 #Fonction pour afficher les statistiques global d'un joueur
-def affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom: str):
+def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourcis_nom: str):
 
-    df_dps_glo = Boss.instances[raccourcis_nom].df_dps[Boss.instances[raccourcis_nom].df_dps['ID'] == date_essais]
+    #Récupération de l'instance Boss pour le boss en question (raccourcis_nom)
+    instance_boss = Boss.instances[raccourcis_nom]
+    instance_boss: Type[Boss]
 
+    #Récupération des différents df utilisé dans cette fonction
+    df_dps_glo = instance_boss.df_dps[instance_boss.df_dps['ID'] == date_essais]
+    df_dps_glo : pd.DataFrame
+
+    #Copie de df_dps_glo pour modifier le df sans impacter la boucle for plus bas
     df_dps = df_dps_glo.copy()
     df_dps = df_dps[df_dps['Account'] == joueur.nom_de_compte]
+    df_dps : pd.DataFrame
+
     nom_personnage = df_dps['Name'].iloc[0]
 
-    df_gen_group = Boss.instances[raccourcis_nom].df_gen_group[Boss.instances[raccourcis_nom].df_gen_group['ID'] == date_essais]
+    df_gen_group = instance_boss.df_gen_group[instance_boss.df_gen_group['ID'] == date_essais]
     df_gen_group = df_gen_group[df_gen_group['Name'] == nom_personnage]
+    df_gen_group : pd.DataFrame
     
-    df_boon_uptime = Boss.instances[raccourcis_nom].df_boon_uptime
+    df_boon_uptime = instance_boss.df_boon_uptime
     df_boon_uptime = df_boon_uptime[df_boon_uptime['ID'] == date_essais]
+    df_boon_uptime : pd.DataFrame
 
     #Définition des variables
     nom_de_compte = joueur.nom_de_compte
@@ -1036,6 +1048,8 @@ def affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom: str):
 
     #Définition de persos
     stats = f"ㅤ**- Perso: **{df_dps['Profession'].iloc[0]}ㅤㅤ \n"
+
+    #Regarde si les boons existe bien
     if boon != "none":
         uptime_boon_cumulee = 0
         compteur = 0
@@ -1056,6 +1070,7 @@ def affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom: str):
                     #Récupère l'uptime et le voncertis en float (en enlevant le % à la fin)
                     uptime_boon_cumulee += float(str(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0])[:-1])
                 else:
+                    
                     #Sinon met à 0
                     uptime_boon_cumulee += 0
                 
