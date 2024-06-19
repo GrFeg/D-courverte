@@ -1043,7 +1043,15 @@ def affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom: str):
         for _, ligne in df_dps_glo.iterrows():
             if sub == ligne['Sub Group']:
                 nom_mate = ligne['Name']
-                uptime_boon += float(str(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0])[:-1])
+
+                #print(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0]) #DEBBUG pour les boons
+
+                #Test si les boons ne valent pas 0
+                if not df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0] == '0':
+                    uptime_boon += float(str(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0])[:-1])
+                else:
+                    uptime_boon += 0
+                
                 compteur += 1
         uptime_boon = uptime_boon / compteur
 
