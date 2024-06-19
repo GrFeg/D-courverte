@@ -1037,34 +1037,43 @@ def affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom: str):
     #Définition de persos
     stats = f"ㅤ**- Perso: **{df_dps['Profession'].iloc[0]}ㅤㅤ \n"
     if boon != "none":
-        uptime_boon = 0
+        uptime_boon_cumulee = 0
         compteur = 0
         #Pour chaque ligne, récupère l'uptime du boon du gars pour ensuite faire le pourcentage moyen d'uptime du sous_groupe
         for _, ligne in df_dps_glo.iterrows():
+
+            #Si la personne est dans le bon sous groupe
             if sub == ligne['Sub Group']:
+
+                #Récupère le nom de l'allié
                 nom_mate = ligne['Name']
 
                 #print(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0]) #DEBBUG pour les boons
 
                 #Test si les boons ne valent pas 0
                 if not df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0] == '0':
-                    uptime_boon += float(str(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0])[:-1])
+
+                    #Récupère l'uptime et le voncertis en float (en enlevant le % à la fin)
+                    uptime_boon_cumulee += float(str(df_boon_uptime[boon][df_boon_uptime['Name'] == nom_mate].iloc[0])[:-1])
                 else:
-                    uptime_boon += 0
+                    #Sinon met à 0
+                    uptime_boon_cumulee += 0
                 
                 compteur += 1
-        uptime_boon = uptime_boon / compteur
 
+        #Fait la moyenne
+        uptime_boon = uptime_boon_cumulee / compteur
+
+        #Regarde si le boon est quickness ou alac pour afficher le bon nom du bonus
         if boon == 'Quickness':
             boon_stats += (f" Quick \n"
                       f"ㅤ**- Uptime:** {round(uptime_boon,1)}% ")
         elif boon == 'Alacrity':
             boon_stats += (f" Alac \n"
                       f"ㅤ**- Uptime:** {round(uptime_boon,1)}% ")
-            
-            
+             
     
-    #Test is soigneur
+    #Test is soigneur et ne met pas la ligne du DPS si oui, sinon la rajoute
     if 'Healing:' in df_dps['Role'][df_dps['Account'] == nom_de_compte].iloc[0]:      
         stats += (f"ㅤ**- Rôle:** Heal {boon_stats} \n")        
     else:
