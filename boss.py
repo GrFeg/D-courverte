@@ -515,9 +515,13 @@ def ajout_lien_au_df(lien : str):
     #Extrait le raccourcis_boss du lien
     raccourcis_boss = lien.split('_')[1]
 
-    instance = Boss.instances[raccourcis_boss]
-    instance: Type[Boss]
-
+    if raccourcis_boss in Boss.instances:
+        instance = Boss.instances[raccourcis_boss]
+        instance: Type[Boss]
+    else:
+        log(f"| Fonction ajout_lien_au_df() | Instance du boss : {raccourcis_boss} non trouvé ! ! !", 2)
+        return -1
+    
     nom_fr = instance.nom_francais
     nom_en = instance.nom_anglais
 
