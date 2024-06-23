@@ -11,6 +11,13 @@ from typing import Type
 import re
 
 
+if os.path.isfile( Path('info_raid.json')):
+    with open('info_raid.json') as config_file:
+        info_raid = json.load(config_file)
+        print(type(info_raid))
+else:
+    log("Fichier info_raid.json introuvable", 3)
+
 if os.path.isfile( Path('config.json')):
     #Récupération des configurations du bot
     with open('config.json') as config_file:
@@ -539,28 +546,10 @@ def ajout_lien_au_df(lien : str):
 
 #Definition des boss présent dans le jeu
 def init_instances_boss():
-    Boss('Gardien de la Valée', 'Vale Guardian', 'vg')
-    Boss('Gorseval le Disparate', 'Gorseval the Multifarious', 'gors')
-    Boss('Sabetha la saboteuse', 'Sabetha the Saboteur', 'sab')
-    Boss('Paressor', 'Slothasor','sloth')
-    Boss('Trio','Bandit Trio','trio')
-    Boss('Mathias','Matthias Gabrel','matt')
-    Boss('escort','escort','esc')
-    Boss('kc','kc','kc')
-    Boss('Chateau corompu','Twistel castle','tc')
-    Boss('xera','xera','xera')
-    Boss('Cairn', 'Cairn the Indomitable', 'cairn')
-    Boss('Mursaat', 'Mursaat','mo')
-    Boss('Samarog','Samarog','sam')
-    Boss('Deimos','Deimos','dei')
-    Boss('Desmina','Soulless Horror','sh')
-    Boss('Dhuum','Dhuum','dhuum')
-    Boss('Adina','Adina','adina')
-    Boss('Sabir','Sabir','sabir')
-    Boss('Qadim 2','Qadim the Peerless','qpeer')
-    Boss('CA','CA','ca')
-    Boss('Jumeaux Largos', 'Twins Largos', 'twins')
-    Boss('Qadim', 'Qadim', 'qadim')
+    for aile in info_raid.values():
+        for boss in aile.values():
+            Boss(boss['nom_francais'], boss['nom_anglais'], boss['raccourcis'])
+    
 
     Boss('Mai trin','Mai trin','trin')
     Boss('Ankka','Ankka','ankka')

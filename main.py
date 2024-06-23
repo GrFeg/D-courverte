@@ -15,7 +15,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import affichage_info
 import re
-from boss import traiterLogs, ajout_lien_au_df, traitement_message_log
+from boss import ajout_lien_au_df, traitement_message_log
 
 '''
 Fichier où le Bot discord est initialisé

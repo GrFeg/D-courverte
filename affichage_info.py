@@ -5,7 +5,6 @@ from fonction import log
 from datetime import datetime
 import locale
 import discord
-import fonction
 import pandas as pd
 
 
@@ -104,7 +103,7 @@ def embed_quel_raids(dico_info_raid_done: dict):
 
     #Définition de l'embed
     embed_info_raid = discord.Embed(title="Récap de la Guilde :", description= "\u200b", color=discord.Color.blue())
-    embed_info_raid.add_field(name = "" , value = "Liste les ailes tombé par la guilde et les ailes bonus" , inline = False)
+    embed_info_raid.add_field(name = "" , value = "Liste les ailes tombées par la guilde et les ailes bonus" , inline = False)
     embed_info_raid.add_field(name = "\u200b" , value = "" , inline = False)
 
     #Définitions de l'aile en hardiesse et double gold en focntion du numero de semaine en cours
@@ -138,7 +137,7 @@ def embed_quel_raids(dico_info_raid_done: dict):
     return embed_info_raid
 
 #Fonction pour acutaliser l'embed recap_hebdo
-async def actualisation_embed(bot, df_histo_message):
+async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
 
     df_boss_hebdo = ajout_boss_hebdo_via_histo(df_histo_message)
     numero_semaine = int( date_du_jour.strftime('%W') )

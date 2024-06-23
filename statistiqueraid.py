@@ -28,6 +28,7 @@ if os.path.isfile( Path('config.json')):
     ID_JOUEUR_PIZZABLEU = config['ID_JOUEUR_PIZZABLEU']
     ID_JOUEUR_CLOUD = config['ID_JOUEUR_CLOUD']
     ID_JOUEUR_ELNABO = config['ID_JOUEUR_ELNABO']
+    ID_JOUEUR_ARKHANGE = config['ID_JOUEUR_ARKHANGE']
     ID_BOT = config['ID_BOT']
 
     CHEMIN_HISTO_LOGS = '/csv/histo_logs.csv'
@@ -138,6 +139,7 @@ if 1:
     damien = Joueur('Damien','Escrimeur.4192')
     nachryma = Joueur('Nachryma','ZancrowFT.7319')
     clement = Joueur('Clement','The Mangoose.7643')
+    arkhange = Joueur('Arkhange', 'arkange.4759', ID_JOUEUR_ARKHANGE)
 
     log(f"Les objets joueurs sont bien crées, nombre crée: {Joueur.nombre_joueurs}", 1)
 
@@ -278,7 +280,7 @@ def init_log():
     return
 
 #Fonction pour afficher un graphique des rôles
-def joli_graphique(df):
+def joli_graphique(df : pd.DataFrame):
 
     # Colonnes numériques à utiliser pour le graphique
     cols = ['Condi', 'Soigneur', 'Tank', 'Power', 'Quick', 'Alac']
