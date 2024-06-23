@@ -123,7 +123,6 @@ async def on_ready():
 async def on_message(message : discord.Message):
 
     #Les différents fichiers où les messages sont regardé 
-    await statistiqueraid.stats_message(message)
     #await shoptitans.shop_message(message)
     #await tombola.tombola_message(message)
     

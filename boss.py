@@ -537,12 +537,11 @@ def ajout_lien_au_df(lien : str):
     else:
         log("| Fonction ajout_lien_au_df() | Erreur, fonction ajout_lien_au_df() non executé ! ! !", 2)
 
-
 #Definition des boss présent dans le jeu
 def init_instances_boss():
     Boss('Gardien de la Valée', 'Vale Guardian', 'vg')
-    Boss('Gorseval', 'Gorseval the Multifarious', 'gors')
-    Boss('Sabetha', 'Sabetha the Saboteur', 'sab')
+    Boss('Gorseval le Disparate', 'Gorseval the Multifarious', 'gors')
+    Boss('Sabetha la saboteuse', 'Sabetha the Saboteur', 'sab')
     Boss('Paressor', 'Slothasor','sloth')
     Boss('Trio','Bandit Trio','trio')
     Boss('Mathias','Matthias Gabrel','matt')

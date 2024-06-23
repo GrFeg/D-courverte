@@ -99,7 +99,6 @@ class Joueur:
 
     liste_joueurs = classmethod(liste_joueurs)
 
-
 #Fonction pour lire tout les csv d'un boss est les stocker, doublon ?????! ! ! 
 def lire_boss(boss):
     '''
@@ -310,6 +309,8 @@ def joli_graphique(df):
     # Ajuster les éléments du graphique
     plt.xticks(angles[:-1], categories)
     plt.ylim(0, 1)
+    plt.gca().set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])  # Définir les positions des ticks
+    plt.gca().set_yticklabels(['20%', '40%', '60%', '80%', '100%'])
     plt.legend(bbox_to_anchor=(0.90, 1), loc=2, borderaxespad=0.)
     plt.savefig('mon_graphique.png')
     
@@ -760,6 +761,7 @@ def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourc
 
 ########## Definition des embed ##########
 
+#Embed chargé lorsqu'il y a une erreur
 def embed_erreur():
     #Définir les propriété de l'embed
     embed = discord.Embed( title = f"** Upsi . . . **",
@@ -773,6 +775,7 @@ def embed_erreur():
 
     return embed
 
+#Embed pour les statistique avec le log.csv cassé ?
 def embedstatistique():
 
     for nom ,objet in Boss.instances.items():
@@ -849,6 +852,7 @@ def embedstatistique():
 
     return embed
 
+#Embed pour la commande detail_soiree
 def embed_detail(lien: str):
 
     if len(traitement_message_log(lien)) == 0:
@@ -862,14 +866,13 @@ def embed_detail(lien: str):
     instance_boss = Boss.instances[raccourcis_nom]
     instance_boss: Type[Boss]
 
-    resultat = 0
     #Test si le log du boss est déjà dans l'instance du boss, sinon le crée
     if  not instance_boss.recherche_combat_existe_dans_Boss(date_essais):
         log(f'{date_essais} non trouvé dans df_global de {raccourcis_nom}, démarrage traiterlogs', 0)
         resultat = traiterLogs(lien)
 
-    if resultat == -1:
-        return embed_erreur()
+        if resultat == -1:
+            return embed_erreur()
 
 
     #Récupération du df_global pour la date du lien
@@ -932,6 +935,7 @@ def embed_detail(lien: str):
 
     return embed
 
+#Embed pour la commande soirée
 def embed_soiree(bouton: int, mecs: bool):
 
     #Récupération des liens stocké dans histo_log.csv et définiton du pointeur.
@@ -950,6 +954,7 @@ def embed_soiree(bouton: int, mecs: bool):
         pointeur_lien_log = len(liens_soiree) - 1
     if pointeur_lien_log == len(liens_soiree):
         pointeur_lien_log = 0
+
     lien = liens_soiree[pointeur_lien_log]
 
     #Nettoie le lien ("cm" ou autre)
@@ -958,29 +963,29 @@ def embed_soiree(bouton: int, mecs: bool):
     except:
         1
 
+    if len(traitement_message_log(lien)) == 0:
+        return embed_erreur()
+
     #Définition des variables
     raccourcis_nom = lien[lien.index('_') +1 :]
 
     #Récupération de l'instance Boss pour le boss en question (raccourcis_nom)
-    instance_boss = Boss.instances[raccourcis_nom]
-    instance_boss: Type[Boss]
-
+    if raccourcis_nom in Boss.instances:
+        instance_boss = Boss.instances[raccourcis_nom]
+        instance_boss: Type[Boss]
+    else:
+        log(f"| Fonction embed_soiree() | Instance du boss : {raccourcis_nom} non trouvé ! ! !", 2)
+        return embed_erreur()
 
     date_essais = lien[lien.index('-') +1 : lien.index('_')]
-    log_existe = instance_boss.recherche_combat_existe_dans_Boss(date_essais)
 
-    #Test si l'instance du boss est bien chargé
-    if log_existe == -1:
-        log(f"Embed_soiree : Log de {raccourcis_nom} n'a pas pu être chargé",2)
-        embed = discord.Embed(title       =   f"**{pointeur_lien_log + 1} / {len(liens_soiree)} - Détail de {raccourcis_nom} impossible !**",
-                              description =   "La personne qui a écrit cette ligne n'a pas encore géré ce boss upsi . . .", 
-                              color       =   discord.Colour.red())
-        return embed
-    
     #Test si le log du boss est déjà dans l'instance du boss, sinon le crée
-    elif  not log_existe:
+    if  not instance_boss.recherche_combat_existe_dans_Boss(date_essais):
         log(f'{date_essais} non trouvé dans df_global de {raccourcis_nom}, démarrage traiterlogs', 0)
-        traiterLogs(lien)
+        resultat = traiterLogs(lien)
+
+        if resultat == -1:
+            return embed_erreur()
 
 
     df_global = instance_boss.df_global[instance_boss.df_global['ID'] == date_essais]
@@ -1054,7 +1059,8 @@ def embed_soiree(bouton: int, mecs: bool):
         embed.add_field(name ="Lien du boss:", value = lien , inline = True)
     return embed
 
-def embed_role(joueur, boss):
+#Embed pour la commande rôle
+def embed_role(joueur: int, boss: str):
 
     graphique, taille = 0,0
     for nom in Joueur.instances.values():
@@ -1090,12 +1096,3 @@ def embed_role(joueur, boss):
     embed.set_image(url="attachment://mon_graphique.png")
     
     return graphique, embed
-
-async def stats_message(message):
-
-    #Actualiser liens_soiree si des liens sont postés pendant le bot est allumé. Remet à 0 le pointeur.
-    if message.channel.id == 892509041140588581:
-        global liens_soiree
-        global pointeur_lien_log
-        liens_soiree = message.content.split('\n') 
-        pointeur_lien_log = 0
