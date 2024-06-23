@@ -8,6 +8,7 @@ import discord
 import fonction
 import pandas as pd
 
+
 DICO_NOM_BOSS_RAID = {
         "W1" : ["Gardien de la valée","Groseval","Sabetha"],
         "W2" : ["Slothasor","Trio","Mathias"],
@@ -67,7 +68,7 @@ def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
     df_boss_hebdo = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_BOSS_HEBDO, index_col = 'num_sem')
 
     #Pour chaque ligne de df_histo_mesage
-    for indexe, ligne in df_histo_message.iterrows():
+    for _, ligne in df_histo_message.iterrows():
 
         #Convertis la date et récupère le n° de semaine
         date = datetime.strptime( str(ligne['date']),"%Y%m%d" )

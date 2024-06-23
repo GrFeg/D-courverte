@@ -14,6 +14,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import affichage_info
+import re
+from boss import traiterLogs, ajout_lien_au_df, traitement_message_log
 
 '''
 Fichier où le Bot discord est initialisé
@@ -67,6 +69,7 @@ class MonBot(commands.Bot, discord.Client):
         await self.tree.sync(guild=discord.Object(id= ID_GUILD_SERVEUR_INAE))
 
 bot = MonBot()
+
 
 #Calcule le % entre deux nombres de votes
 def calcul_pourcentage(csv_embed: list):
@@ -126,11 +129,20 @@ async def on_message(message : discord.Message):
     
     #Définition des variables
     channel_nom = message.channel.name
+    channel_id = message.channel.id
     joueur = message.author.name
     id_joueur = message.author.id
     message_contenu = message.content
 
     log(f"{message.guild.name} - Message de: {joueur}:  {message_contenu} dans: {channel_nom}",3)
+
+    if channel_id == CHANNEL_ID_LOGS:
+        liste_logs = traitement_message_log(message.content)
+
+        if len(liste_logs) > 0:
+            for lien_log in liste_logs:
+                ajout_lien_au_df(lien_log)
+
 
     #Changer le pseudo de mioune
     if "Mioune"  in message_contenu:
@@ -176,7 +188,6 @@ async def on_message(message : discord.Message):
         
         # Envoyez l'embed et l'image dans le canal
         await message.channel.send(file=file, embed=embed)
-
 
 
 #Définission de l'embed vote
