@@ -152,7 +152,8 @@ async def on_message(message : discord.Message):
 
                 #Si tout c'est bien passé, le rajoute a histo_log
                 if not erreur == -1:
-                    await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
+                    df_histo_message = await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
+                    await affichage_info.actualisation_embed(bot, df_histo_message)
         else:
             await message.delete()
 

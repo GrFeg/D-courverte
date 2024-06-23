@@ -144,10 +144,9 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
     numero_semaine = int( date_du_jour.strftime('%W') )
 
     #Si on est lundi RESET des infos
-    if date_du_jour.strftime("%A") == "lundi" : 
-        #Si il est moins de 21h
-        if int(date_du_jour.strftime("%H")) < 21:
-            dico_info_raid_done = {
+    if date_du_jour.strftime("%A") == "lundi" and  int(date_du_jour.strftime("%H")) < 21: 
+
+        dico_info_raid_done = {
                 "W1" : [False, False, False],
                 "W2" : [False, False, False],
                 "W3" : [False, False, False],
