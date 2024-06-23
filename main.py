@@ -135,12 +135,26 @@ async def on_message(message : discord.Message):
 
     log(f"{message.guild.name} - Message de: {joueur}:  {message_contenu} dans: {channel_nom}",3)
 
+    #Test si le chanel est le canal des logs
     if channel_id == CHANNEL_ID_LOGS:
+        #Récupère une liste des logs traité
         liste_logs = traitement_message_log(message.content)
 
+        #Si la liste n'est pas vide
         if len(liste_logs) > 0:
+            #Ouvre histo_log.csv
+            df_histo_log = pd.read_csv(CHEMIN_RACINE + '/' + CHEMIN_HISTO_LOGS)
+            
+            #Pour chaque lien dans la liste
             for lien_log in liste_logs:
-                ajout_lien_au_df(lien_log)
+                #Ajoute le lien au df global du boss (traite etc ..)
+                erreur = ajout_lien_au_df(lien_log)
+
+                #Si tout c'est bien passé, le rajoute a histo_log
+                if not erreur == -1:
+                    await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
+        else:
+            await message.delete()
 
 
     #Changer le pseudo de mioune
@@ -157,7 +171,7 @@ async def on_message(message : discord.Message):
         await message.channel.send("Ah bah oui c'est super même !")
 
     #Cloud !
-    if id_joueur == ID_JOUEUR_CLOUD:
+    if id_joueur == ID_JOUEUR_CLOUD and not channel_id == CHANNEL_ID_LOGS:
         await message.add_reaction('💩')
 
     if "graphq"  in message_contenu:

@@ -7,7 +7,6 @@ import locale
 import discord
 import pandas as pd
 
-
 DICO_NOM_BOSS_RAID = {
         "W1" : ["Gardien de la valée","Groseval","Sabetha"],
         "W2" : ["Slothasor","Trio","Mathias"],
@@ -143,18 +142,18 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
     numero_semaine = int( date_du_jour.strftime('%W') )
 
     #Si on est lundi RESET des infos
-    if date_du_jour.strftime("%A") == "lundi" : #RESTE A VOIR LA DATE POUR EVITER CONFLIT LE LUNDI SI APRES 21H ! ! ! ! ! ! ! ! !
-
-        dico_info_raid_done = {
-            "W1" : [False, False, False],
-            "W2" : [False, False, False],
-            "W3" : [False, False, False],
-            "W4" : [False, False, False, False],
-            "W5" : [False, False, False],
-            "W6" : [False, False, False],
-            "W7" : [False, False, False],
-        }
-
+    if date_du_jour.strftime("%A") == "lundi" : 
+        #Si il est moins de 21h
+        if date_du_jour.strftime("%H") < 21:
+            dico_info_raid_done = {
+                "W1" : [False, False, False],
+                "W2" : [False, False, False],
+                "W3" : [False, False, False],
+                "W4" : [False, False, False, False],
+                "W5" : [False, False, False],
+                "W6" : [False, False, False],
+                "W7" : [False, False, False],
+            }
     else:
          series_semaine = df_boss_hebdo.loc[numero_semaine]
          dico_info_raid_done = {

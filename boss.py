@@ -10,11 +10,14 @@ import fonction
 from typing import Type
 import re
 
+'''
+Fichier qui contient la Class Boss et toutes les fonctions touchant au combat de boss.
 
+
+'''
 if os.path.isfile( Path('info_raid.json')):
     with open('info_raid.json') as config_file:
-        info_raid = json.load(config_file)
-        print(type(info_raid))
+        INFO_RAID = json.load(config_file)
 else:
     log("Fichier info_raid.json introuvable", 3)
 
@@ -34,18 +37,18 @@ if os.path.isfile( Path('config.json')):
 
     date_du_jour = datetime.now()
     numero_semaine = int( date_du_jour.strftime('%W') )
-
 else:
     log("Fichier config.json introuvable", 3)
 
 
 class Boss:
     '''
-    Class qui définit tout les boss présent dans le jeu, leurs noms (anglais et français).
+    Class qui définit tout les boss présent dans le jeu, leurs noms (anglais et français) et le raccourcis utilisé dans les lien dps.report.
     Stocke tout les Data Frame du boss
 
-    Fonction recherche_combat_existe_dans_Boss: Test si l'ID est dans le df_global -> Renvoit true ou false
+    Fonction recherche_combat_existe_dans_Boss: Test si l'ID est dans le df_global -> Renvoit True ou False
     Fonction boss_mort_ou_vivant: Test si le boss est mort ou non -> Renvoit True ou False
+    Fonction boss_en_cm: Test si le boss est en cm ou non -> Renvoit True ou False
     '''
 
     instances = {}
@@ -546,7 +549,7 @@ def ajout_lien_au_df(lien : str):
 
 #Definition des boss présent dans le jeu
 def init_instances_boss():
-    for aile in info_raid.values():
+    for aile in INFO_RAID.values():
         for boss in aile.values():
             Boss(boss['nom_francais'], boss['nom_anglais'], boss['raccourcis'])
     
@@ -555,6 +558,9 @@ def init_instances_boss():
     Boss('Ankka','Ankka','ankka')
 
     log(f"Les objets Boss sont bien crées, nombre crée: {Boss.nbr_boss}", 1)
+
+
+
 
 
 init_instances_boss()
