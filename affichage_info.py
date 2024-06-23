@@ -106,8 +106,10 @@ def embed_quel_raids(dico_info_raid_done: dict):
     embed_info_raid.add_field(name = "\u200b" , value = "" , inline = False)
 
     #Définitions de l'aile en hardiesse et double gold en focntion du numero de semaine en cours
-    hardiesse = numero_semaine % 7 + 2
-    gold = numero_semaine % 7 + 3
+    hardiesse = (numero_semaine + 1) % 7 + 1
+    gold = (numero_semaine + 2) % 7 + 1
+
+    print(hardiesse, gold)
 
     #Pour chaque Aile de raid (7)
     compteur = 0
@@ -144,7 +146,7 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
     #Si on est lundi RESET des infos
     if date_du_jour.strftime("%A") == "lundi" : 
         #Si il est moins de 21h
-        if date_du_jour.strftime("%H") < 21:
+        if int(date_du_jour.strftime("%H")) < 21:
             dico_info_raid_done = {
                 "W1" : [False, False, False],
                 "W2" : [False, False, False],
