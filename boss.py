@@ -15,8 +15,8 @@ Fichier qui contient la Class Boss et toutes les fonctions touchant au combat de
 
 
 '''
-if os.path.isfile( Path('info_raid.json')):
-    with open('info_raid.json') as config_file:
+if os.path.isfile( Path('info.json')):
+    with open('info.json') as config_file:
         INFO_RAID = json.load(config_file)['raid']
 else:
     log("Fichier info_raid.json introuvable", 3)
