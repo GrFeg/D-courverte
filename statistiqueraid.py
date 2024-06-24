@@ -15,90 +15,23 @@ import os
 from PIL import Image
 from pathlib import Path
 from boss import Boss, traiterLogs, traitement_message_log
+from joueur import Joueur
 from typing import Type
 
-
-pointeur_lien_log = 0
 
 if os.path.isfile( Path('config.json')):
     #Récupération des configurations du bot
     with open('config.json') as config_file:
         config = json.load(config_file)
 
-    ID_JOUEUR_PIZZABLEU = config['ID_JOUEUR_PIZZABLEU']
-    ID_JOUEUR_CLOUD = config['ID_JOUEUR_CLOUD']
-    ID_JOUEUR_ELNABO = config['ID_JOUEUR_ELNABO']
-    ID_JOUEUR_ARKHANGE = config['ID_JOUEUR_ARKHANGE']
-    ID_BOT = config['ID_BOT']
-
     CHEMIN_HISTO_LOGS = '/csv/histo_logs.csv'
-    CHEMIN_BOSS_HEBDO = 'csv/boss_done_hebdo.csv'
     CHEMIN_RACINE = os.path.dirname(__file__) 
 
-    date_du_jour = datetime.now()
-    numero_semaine = int( date_du_jour.strftime('%W') )
+    pointeur_lien_log = 0
 
 else:
-    log("Fichier config.json introuvable", 3)
+    log("Fichier config.json introuvable", 2)
 
-
-class Joueur:
-
-    """
-    Class qui définit touts les joueurs de raids des InAe !
-    """
-    nombre_joueurs = 0
-    instances = {}
-
-    def __init__(self, pseudo, nom_de_compte, id_discord = -1):
-        
-        #Définition des variables du JOUEUR
-        self.pseudo = pseudo
-        self.nom_de_compte = nom_de_compte
-        self.nom_de_compte_log = ":" + nom_de_compte
-        self.id_discord = id_discord
-
-        #Partie utile pour la commande statistique
-        self.nbr_mort = -1
-        self.nbr_terre = -1
-        self.nbr_mecanique = -1
-        self.calin = -1
-
-        Joueur.nombre_joueurs += 1
-        Joueur.instances[self.pseudo] = self
-
-    
-    def raid(self, csv_raid):
-        '''
-        Fonction utilisé dans la commande Statistique
-        '''
-        #Pour chaque ligne du CSV
-        for ligne in csv_raid:
-            #Test si la ligne possède le nom d'un joueur de la guilde
-            if self.nom_de_compte in ligne:
-                #Recupère les informations utile
-                if "All" in ligne:
-                    self.nbr_mort = ligne[7]
-                    self.nbr_terre = ligne[6]
-                    self.nbr_mecanique = ligne[5]
-                
-                if "was snatched" in ligne:
-                    self.calin = ligne[5]
-
-        #Test si le joueur a été trouvé. Renvoit True, sinon Renvoit False et met toutes les valeurs à -1.
-        if self.nbr_mort != -1:
-            return True
-        else:
-            self.nbr_mort = -1
-            self.nbr_terre = -1
-            self.nbr_mecanique = -1
-            self.calin = -1
-            return False
-    
-    def liste_joueurs(cls):
-        return list(Joueur.instances.keys()), list(Joueur.instances.values())
-
-    liste_joueurs = classmethod(liste_joueurs)
 
 #Fonction pour lire tout les csv d'un boss est les stocker, doublon ?????! ! ! 
 def lire_boss(boss):
@@ -123,26 +56,6 @@ def lire_boss(boss):
     if len(dico_df) != 11:
         log(f"Fichier dans {boss} manquant, risque d'erreur probable.",2)
     return dico_df
-
-#Joueur de la guilde
-if 1:
-    cloud = Joueur("Cloud","Cloudlloyd.9240", ID_JOUEUR_CLOUD)
-    tenro = Joueur("Tenro",'Tenro.8107')
-    elnabo = Joueur('Elnabo','Elnabo.2014', ID_JOUEUR_ELNABO)
-    drakh = Joueur('Drakh','Drakh.7321')
-    pizza = Joueur('PizzaBleu',"PizzaBleu.7615", ID_JOUEUR_PIZZABLEU)
-    nils = Joueur('Nils','Nils.7289')
-    blade = Joueur('BladeLarkin','bladelarkin.5790')
-    gon = Joueur('Gon','BigBang.9125')
-    yoda = Joueur('Yoda','Mini maitreyoda.7849')
-    elias = Joueur('Ellias','Spongex.7864')
-    damien = Joueur('Damien','Escrimeur.4192')
-    nachryma = Joueur('Nachryma','ZancrowFT.7319')
-    clement = Joueur('Clement','The Mangoose.7643')
-    arkhange = Joueur('Arkhange', 'arkange.4759', ID_JOUEUR_ARKHANGE)
-
-    log(f"Les objets joueurs sont bien crées, nombre crée: {Joueur.nombre_joueurs}", 1)
-
 
 #Fonction qui va s'occuper de tout les raid parse par le logiciel.
 def init_log():

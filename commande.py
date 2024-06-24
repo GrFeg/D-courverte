@@ -176,9 +176,9 @@ def vote(question, reponse1, reponse2):
     embed_vote = discord.Embed(title = "**Vote:**", description = question, color=0x80ff80)
     embed_vote.add_field(name = "\u200b" , value = "" , inline = False)
 
-    embed_vote.add_field(name = "🟩 Team verte" , value = f"{reponse1:<10}" , inline = False)
+    embed_vote.add_field(name = "🟩 | Team verte" , value = f"{reponse1:<10}" , inline = False)
     embed_vote.add_field(name = "\u200b" , value = "" , inline = False)
-    embed_vote.add_field(name = "🟦 : Team Bleu" , value = f"{reponse2:<10}" , inline = False)
+    embed_vote.add_field(name = "🟦 | Team Bleu" , value = f"{reponse2:<10}" , inline = False)
     embed_vote.add_field(name = "\u200b" , value = "⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜" , inline = False)
 
     return embed_vote
