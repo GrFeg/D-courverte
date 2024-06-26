@@ -10,7 +10,7 @@ import pandas as pd
 DICO_NOM_BOSS_RAID = {
         "W1" : ["Gardien de la valée","Groseval","Sabetha"],
         "W2" : ["Slothasor","Trio","Mathias"],
-        "W3" : ["Escorte","Titan du fort ","Xera"],
+        "W3" : ["Escorte","Titan du fort","Chateau Corrompu","Xera"],
         "W4" : ["Cairn","Mursaat","Samarog","Deimos"],
         "W5" : ["Horreur sans âme","Rivière","Dhuum"],
         "W6" : ["Amalgame conjuré","Jumeaux Largos","Qadim"],
@@ -26,13 +26,14 @@ DICO_EQUIVALENT_ABREGEE_NOM = {
         "matt" : "Mathias",
         "esc" : "Escorte",
         "kc" : "Groseval",
+        "tc" : "Chateau Corrompu",
         "xera" : "Xera",
         "cairn" : "Cairn",
         "mo" : "Mursaat",
         "sam" : "Samarog",
         "dei" : "Deimos",
         "sh" : "Groseval",
-        "river" : "Groseval",
+        "rr" : "Groseval",
         "dhuum" : "Dhuum",
         "ca" : "Amalgame conjuré",
         "twins" : "Jumeaux Largos",
@@ -109,7 +110,6 @@ def embed_quel_raids(dico_info_raid_done: dict):
     hardiesse = (numero_semaine + 1) % 7 + 1
     gold = (numero_semaine + 2) % 7 + 1
 
-    print(hardiesse, gold)
 
     #Pour chaque Aile de raid (7)
     compteur = 0
@@ -149,7 +149,7 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
         dico_info_raid_done = {
                 "W1" : [False, False, False],
                 "W2" : [False, False, False],
-                "W3" : [False, False, False],
+                "W3" : [False, False, False, False],
                 "W4" : [False, False, False, False],
                 "W5" : [False, False, False],
                 "W6" : [False, False, False],
@@ -160,9 +160,9 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
          dico_info_raid_done = {
             "W1" : [series_semaine['vg'], series_semaine['gors'], series_semaine['sab']],
             "W2" : [series_semaine['sloth'], series_semaine['trio'], series_semaine['matt']],
-            "W3" : [series_semaine['esc'], series_semaine['kc'], series_semaine['xera']],
+            "W3" : [series_semaine['esc'], series_semaine['kc'],series_semaine['tc'], series_semaine['xera']],
             "W4" : [series_semaine['cairn'], series_semaine['mo'], series_semaine['sam'], series_semaine['dei']],
-            "W5" : [series_semaine['sh'], series_semaine['river'], series_semaine['dhuum']],
+            "W5" : [series_semaine['sh'], series_semaine['rr'], series_semaine['dhuum']],
             "W6" : [series_semaine['ca'], series_semaine['twins'], series_semaine['qadim']],
             "W7" : [series_semaine['sabir'], series_semaine['adina'], series_semaine['qpeer']],
         }

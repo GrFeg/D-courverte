@@ -167,6 +167,18 @@ def init_log():
                     
                     if boss == 'prlqadim':
                         boss = 'qpeer'
+                    
+                    if boss == 'aetherhide':
+                        boss = 'trin'
+                    
+                    if boss == 'river':
+                        boss = 'rr'
+                    
+                    if boss == 'xunjadejunk':
+                        boss = 'ankka'
+                    
+                    if boss == 'escort':
+                        boss = 'esc'
 
 
                     chemin = '\\log_boss_df\\' + boss + "\\" +  key + ".csv"

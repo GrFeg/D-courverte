@@ -65,7 +65,7 @@ class Boss:
         try:
             self.mort_hebdo =  df_boss_hebdo.loc[numero_semaine][raccourcis_nom]
         except KeyError:
-            log(f"mort_hebdo non pris en charge pour {raccourcis_nom}", 2)
+            log(f"| Class Boss | mort_hebdo non pris en charge pour {raccourcis_nom}", 2)
             self.mort_hebdo = None
 
 
@@ -244,7 +244,7 @@ def scrap(lien: str):
     print(type(soup.text))
 
     if "error" in soup.text:
-        log(f"| Fonction ajout_boss() | Le lien n'existe pas ! ! !", 2)
+        log(f"| Fonction ajout_boss() | Le lien n'existe pas ! ! ! {lien}", 2)
         return -1
     return soup
 
@@ -557,13 +557,10 @@ def init_instances_boss():
     Boss('Mai trin','Mai trin','trin')
     Boss('Ankka','Ankka','ankka')
 
-    log(f"Les objets Boss sont bien crées, nombre crée: {Boss.nbr_boss}", 1)
+    log(f"| Fonction init_instances_boss() | Les Instances Boss sont bien crées, nombre crée: {Boss.nbr_boss}", 1)
 
 
 
 
 
 init_instances_boss()
-
-#TEST
-ajout_lien_au_df('https://dps.report/uJGU-20240418-214015_sabir')

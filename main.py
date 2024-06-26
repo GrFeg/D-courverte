@@ -142,8 +142,6 @@ async def on_message(message : discord.Message):
 
         #Si la liste n'est pas vide
         if len(liste_logs) > 0:
-            #Ouvre histo_log.csv
-            df_histo_log = pd.read_csv(CHEMIN_RACINE + '/' + CHEMIN_HISTO_LOGS)
             
             #Pour chaque lien dans la liste
             for lien_log in liste_logs:
