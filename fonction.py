@@ -153,7 +153,7 @@ async def recuperation_message(bot, channel_id, nbr_messages,
         async for message in channel.history( limit= nbr_messages ):
             
             #Nettoyage
-            message_sep = message.content.lower().split('\n')
+            message_sep = message.content.split('\n')
             #Si le message comporte plusieurs liens
             for message_sep_pars in message_sep:
                 if not message_sep_pars == "":

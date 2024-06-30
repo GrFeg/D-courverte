@@ -148,10 +148,10 @@ class Boss:
         if self.recherche_combat_existe_dans_Boss(date_essais) == True:
 
             #Recupère le pourcentage de point de vie du boss
-            pourcentage_vie = self.df_global['Boss Health Burned %'][self.df_global['ID'] == date_essais].iloc[0]
+            success = self.df_global['Success'][self.df_global['ID'] == date_essais].iloc[0]
 
             #Si le % est égale à 0 alors le boss est mort, renvoit True
-            if int(pourcentage_vie) == 0:
+            if success:
                 return True
             else: #Sinon False
                 return False

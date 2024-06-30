@@ -75,7 +75,6 @@ def test_si_boss_mort(lien: str):
     boss = Boss.instances[raccourcis_boss]
     boss: Type[Boss]
 
-    print(boss.boss_mort_ou_vivant(date_essais))
     return boss.boss_mort_ou_vivant(date_essais)
 
 #Fonction qui va actualiser le fichier Boss_done_hebdo en fonction des boss tombé dans hsito_log
