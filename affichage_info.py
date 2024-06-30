@@ -6,6 +6,9 @@ from datetime import datetime
 import locale
 import discord
 import pandas as pd
+from boss import Boss
+from typing import Type
+
 
 DICO_NOM_BOSS_RAID = {
         "W1" : ["Gardien de la valée","Groseval","Sabetha"],
@@ -60,6 +63,21 @@ if os.path.isfile( Path('config.json') ):
 else:
     log("Fichier config.json introuvable", 3)
 
+#Renvoit True or False si le boss est mort ou non
+def test_si_boss_mort(lien: str):
+
+    #Extrait la date du lien
+    date_essais = (lien.split('-')[1] + '-' + lien.split('-')[2]).split('_')[0]
+
+    #Extrait le raccourcis_boss du lien
+    raccourcis_boss = lien.split('_')[1]
+
+    boss = Boss.instances[raccourcis_boss]
+    boss: Type[Boss]
+
+    print(boss.boss_mort_ou_vivant(date_essais))
+    return boss.boss_mort_ou_vivant(date_essais)
+
 #Fonction qui va actualiser le fichier Boss_done_hebdo en fonction des boss tombé dans hsito_log
 def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
 
@@ -78,12 +96,13 @@ def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
              
              #Si le boss existe dans la liste des abréviations
              if ligne['boss'] in DICO_EQUIVALENT_ABREGEE_NOM:
+                
+                 print(ligne['logs'])
 
-                 #MANQUE A VERIFIER SI LE BOSS EST BIEN TOMBE ! ! ! ! ! ! ! 
-
-                 #Met ce boss à True (car tombé) 
-                 df_boss_hebdo.at[numero_semaine, ligne['boss']] = True
-   
+                 if test_si_boss_mort(ligne['logs']):
+                    #Met ce boss à True (car tombé) 
+                    df_boss_hebdo.at[numero_semaine, ligne['boss']] = True
+    
              else:
                   log( f"Boss non trouvé {ligne['boss']}", 2 )
     
@@ -178,10 +197,8 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
         message_trouve = False
 
     if not message_trouve:
-            print("Envoit de l'embed sur discord ! ")
             await channel.send( embed = embed )   
     else:
-            print('Envoit de l embed')
             await message.edit( embed  = embed )
               
         
