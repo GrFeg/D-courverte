@@ -116,8 +116,6 @@ async def on_ready():
     await affichage_info.actualisation_embed(bot, df_histo_message)
 
 
-
-
 #Detecte un message envoyé
 @bot.event
 async def on_message(message : discord.Message):
