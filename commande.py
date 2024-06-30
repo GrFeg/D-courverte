@@ -66,9 +66,9 @@ class SlashCommands(commands.Cog):
         joueur = interaction.user.id
         file, embed = statistiqueraid.embed_role(joueur, boss)
         if file != -1:
-            await interaction.response.send_message(embed=embed, file=file, ephemeral=False)
+            await interaction.response.send_message(embed =embed, file=file, ephemeral=False)
         else:
-            await interaction.response.send_message(embed=embed)
+           await interaction.response.send_message(embed=embed)
 
 
     #Commande soiree

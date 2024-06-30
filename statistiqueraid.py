@@ -76,6 +76,19 @@ def init_log():
         #creer le chemin complet avec le nom du fichier
         chemin_complet = os.path.join(chemin_dossier, fichier)
 
+        date = fichier.split('_')[0]
+        nom_boss = fichier.split('_')[1]
+
+        instance_boss = Boss.instances[nom_boss]
+        instance_boss: Type[Boss]
+
+        if instance_boss.recherche_combat_existe_dans_Boss(date):
+            log(f"| Fonction init_log() | Combat ({date}_{nom_boss}) existe déjà, fonction avorté ! !")
+            os.remove(chemin_complet)
+            continue
+        else:
+            log(f"| Fonction init_log() | Combat ({date}_{nom_boss}) non trouvée, récupération logs")
+
         #Si le fichier existe
         if os.path.isfile(chemin_complet):
             #Si c'est un csv
@@ -83,11 +96,12 @@ def init_log():
                 #print(f"Ouverture du fichier {fichier}")
                 data = []
                 #Stock le fichier dans data
-                with open(chemin_complet, mode='r', encoding='ISO-8859-1') as file:
+                with open(chemin_complet, mode='r', encoding='utf-8', errors='replace') as file:
                     reader = csv.reader(file)
                     
                     for row in reader:
-                        data.append(row)
+                        new_row = [cell.replace('�', 'é') for cell in row]
+                        data.append(new_row)
                 #print(len(data))
 
                 #Split data en différent df pour chaque saut de ligne detecté.
@@ -201,14 +215,14 @@ def init_log():
 
                 compteur += 1 
                 
-                os.remove(chemin_complet)
+                #os.remove(chemin_complet)
     return
 
 #Fonction pour afficher un graphique des rôles
 def joli_graphique(df : pd.DataFrame):
 
     # Colonnes numériques à utiliser pour le graphique
-    cols = ['Condi', 'Soigneur', 'Tank', 'Power', 'Quick', 'Alac']
+    cols = ['Soigneur', 'Tank', 'Condi', 'Power', 'Quick', 'Alac']
 
     # Normaliser les données pour chaque colonne (entre 0 et 1)
     #data_norm = (df[cols] - df[cols].min()) / (df[cols].max() - df[cols].min())
@@ -266,83 +280,74 @@ def quel_role_sur_quel_boss(boss, nom_de_compte):
     Fonction pour savoir quels proportion des rôles le joueur a t-il fait sur un boss en question.
     Affiche le graphique grace a la fonction joli_graphique
     '''
+    instance_boss = Boss.instances[boss]
+    instance_boss: Type[Boss]
 
     #Recupère les df du boss
-    dico_df = lire_boss(boss)
+    df_stats_global = instance_boss.df_global[['ID','Boss']]
+    df_stats_dps = instance_boss.df_dps[['ID','Role','Name','Account']][instance_boss.df_dps['Account'] == nom_de_compte]
+    df_boon_gen_gorup = instance_boss.df_gen_group[['ID','Alacrity','Quickness']][instance_boss.df_gen_group['Name'].isin(df_stats_dps['Name'])]
 
-    #Cherche si le dico est non nul (pas d'erreur dans lire_boss())
-    if dico_df == -1:
-        log(f"Dico_df inexploitable pour {boss}, fin de la fonction quel_role_sur_quel_boss", 2)
-        return -1, -1
+    df_stats_dps = df_stats_dps.drop_duplicates(subset='ID', keep='last')
+    df_boon_gen_gorup = df_boon_gen_gorup.drop_duplicates(subset='ID', keep='last')
+    df_stats_global = df_stats_global.drop_duplicates(subset='ID', keep='last')
 
-    #Cherche si le df Stats_global existe, l'isole, sinon return -1
-    if 'Stats_global' in dico_df:
-        df_stats_global = dico_df['Stats_global'][['ID','Boss']]
-    else:
-        log(f"DataFrame 'Stats_global' introuvable", 2)
-        return -1, -1
-
-    #Cherche si le df Stats_DPS existe, l'isole, sinon return -1
-    if 'Stats_DPS' in dico_df:
-        df_stats_dps =  dico_df['Stats_DPS'][['ID','Role','Account','Name']]
-    else:
-        log(f"DataFrame 'Stats_DPS' introuvable", 2)
-        return -1, -1
-
-    #Cherche si le df Boons_gen_group existe, l'isole, sinon return -1
-    if 'Boons_gen_group' in dico_df:
-        df_boon_gen_gorup =  dico_df['Boons_gen_group'][['ID','Name','Quickness','Alacrity']]
-    else:
-        log(f"DataFrame 'Boons_gen_group' introuvable", 2)
-        return -1, -1
-
-    #Garde uniquement le joueur voulus
-    df_stats_dps = df_stats_dps[df_stats_dps['Account'] == nom_de_compte]
-    df_boon_gen_gorup = df_boon_gen_gorup[df_boon_gen_gorup['Name'].isin(df_stats_dps['Name'])]
 
     #Merge les df pour un df_global
     df = pd.merge(df_stats_dps, df_stats_global, on = 'ID', how = 'left')
     df = pd.merge(df, df_boon_gen_gorup, on = 'ID', how = 'left')
 
+    print(df)
     #Pour chaque ligne du df, regarde le rôle que la personne faisait.
     for indexe, ligne in df.iterrows():
+        role = ligne['Role']
+        print(ligne)
         #Tank
-        if ligne['Role'] == " Concentration:10 Healing:10 Toughness:10":
-            df.loc[indexe, ['Role']] = ['Toughness:10']
+        if "Toughness" in role:
+            df.loc[indexe, ['Role_f']] = ['Tank']
+            continue
+        if "Healing" in role:
+            df.loc[indexe, ['Role_f']] = ['Soigneur']
+            continue
         #DPS
-        if ligne['Role'] == "Condi:10" or ligne['Role'] == "-1":
+        if "Condi" in role or "-1" in role:
             #ALAC
             if ligne['Alacrity'] != '0':
                 gen_alac = float(ligne['Alacrity'][:-1])
-                print(gen_alac)
                 if gen_alac > 20:
-                    df.loc[indexe, ['Role']] = ["Quick"]
-                    print(df.loc[indexe, ['Role']])
+                    df.loc[indexe, ['Role_f']] = ["Alac"]
+                    continue
             #QUICK
             if ligne['Quickness'] != '0':
                 gen_quick = float(ligne['Quickness'][:-1])
-                print(gen_quick)
                 if gen_quick > 20:
-                    df.loc[indexe, ['Role']] = ["Alac"]
-                    print(df.loc[indexe, ['Role']])
+                    df.loc[indexe, ['Role_f']] = ["Quick"]
+                    continue
+            #Condi
+            if "Condi" in role:
+                df.loc[indexe, ['Role_f']] = ["Condi"]
+                continue
+        #Power
+        df.loc[indexe, ['Role_f']] = ["Power"]
 
     #Split les différents rôle et considère les case vide comme étant Power
-    df2 = df['Role'].str.get_dummies(sep=' ')
-    df2 = df2.rename(columns = {'-1': "Power"})
+    df2 = df['Role_f'].str.get_dummies(sep=' ')
     df_final = pd.concat([df, df2], axis=1)
 
     #Si une colonne n'existe pas, la créee
-    liste_nom_colonne = ['Condi:10', 'Healing:10', 'Toughness:10','Power','Quick', 'Alac']
+    liste_nom_colonne = ['Condi', 'Soigneur', 'Tank', 'Power', 'Quick', 'Alac']
     for nom_colonnes in liste_nom_colonne:
         if nom_colonnes not in df_final.columns:
             df_final[nom_colonnes] = 0
     
-    #Renomme les noms des colonnes pour une VF
-    df_final.rename(columns={'Condi:10': 'Condi', 'Healing:10': 'Soigneur', 'Toughness:10': 'Tank'}, inplace=True)
+
+    #print(df_final[['Role','Role_f']])
 
     #Afficher le graphique et renvoit le nombre de try
     return joli_graphique(df_final), df_final.shape[0]
-    
+
+
+
 
 init_log()
 
@@ -734,13 +739,14 @@ def dps_moyen(joueur: Type[Joueur], boss: Type[Boss]):
     stats_glo = [pourcentage_vie, nbr_try]
     return dps, stats_glo
 
+"""
 print("Test : ")
 dico, stats_glo = dps_moyen(Joueur.instances[220996307102334976], Boss.instances['dhuum'])
 for cle, valeur in dico.items():
     print(cle, ' : ', valeur)
 
 print(stats_glo)
-
+"""
 
 ########## Definition des embed ##########
 
