@@ -33,7 +33,7 @@ class Joueur:
         self.calin = -1
 
         Joueur.nombre_joueurs += 1
-        Joueur.instances[self.pseudo] = self
+        Joueur.instances[self.id_discord] = self
 
     
     def raid(self, csv_raid):

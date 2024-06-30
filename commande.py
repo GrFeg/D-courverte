@@ -163,6 +163,18 @@ class SlashCommands(commands.Cog):
         await message_vote.add_reaction('🟩')
         await message_vote.add_reaction('🟦')
     
+    #Commande DPS
+    @app_commands.command(name="dps", description="Voir son DPS sur un Boss précis !")
+    @discord.app_commands.guilds(discord.Object(id= ID_GUILD_SERVEUR_INAE))
+    async def dps(self, interaction: discord.Interaction, boss: str):
+
+        user_id = interaction.user.id
+
+        await interaction.response.send_message(embed = statistiqueraid.embed_dps(user_id, boss))
+
+
+
+
 
 #Fonction pour synchroniser les commandes avec le fichier main
 async def setup(bot):

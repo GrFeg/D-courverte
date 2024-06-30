@@ -686,6 +686,62 @@ def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourc
 
     return stats
 
+def dps_moyen(joueur: Type[Joueur], boss: Type[Boss]):
+
+    #Récuperation des DF
+    df_glo = boss.df_global
+    df_glo: pd.DataFrame
+
+    df_dps = boss.df_dps
+    df_dps: pd.DataFrame
+
+    #Series pour filtrer le df_dps avec que des try qui sont tombé
+    series_date_true = df_glo['ID'][df_glo['Success'] == True]
+    print(series_date_true)
+    print('')
+
+    #Filtrage avec la series
+    df_dps = boss.df_dps[boss.df_dps['ID'].isin(series_date_true)]
+    df_dps = df_dps[df_dps['Account'] == joueur.nom_de_compte]
+    df_dps = df_dps[( df_dps['Role'] == '-1' ) | ( df_dps['Role'].str.contains('Condi') )]
+    print(df_dps[['ID','Role','Time Died']])
+    print('')
+
+    #Partie DPS
+    dps = {}
+
+    dps["DPS Global Total"] = [df_dps['All DPS'][(df_dps['Time Died'] == 0)].mean(),
+                             len( df_dps['All DPS'][(df_dps['Time Died'] == 0)] )]
+    dps["DPS Global Power"] = [df_dps['All DPS'][(df_dps['Time Died'] == 0) & (df_dps['Role'] == '-1')].mean(),
+                             len( df_dps['All DPS'][(df_dps['Time Died'] == 0) & (df_dps['Role'] == '-1')] )]
+    dps["DPS Global Condi"] = [df_dps['All DPS'][(df_dps['Time Died'] == 0) & (df_dps['Role'].str.contains('Condi'))].mean(),
+                             len( df_dps['All DPS'][(df_dps['Time Died'] == 0) & (df_dps['Role'].str.contains('Condi'))] )]
+
+    dps["DPS Target Total"] = [df_dps['Boss DPS'][(df_dps['Time Died'] == 0)].mean(),
+                             len( df_dps['Boss DPS'][(df_dps['Time Died'] == 0)] )]   
+    dps["DPS Target Power"] = [df_dps['Boss DPS'][(df_dps['Time Died'] == 0) & (df_dps['Role'] == '-1')].mean(),
+                             len( df_dps['Boss DPS'][(df_dps['Time Died'] == 0) & (df_dps['Role'] == '-1')] )]
+    dps["DPS Target Condi"] = [df_dps['Boss DPS'][(df_dps['Time Died'] == 0) & (df_dps['Role'].str.contains('Condi'))].mean(),
+                             len( df_dps['Boss DPS'][(df_dps['Time Died'] == 0) & (df_dps['Role'].str.contains('Condi'))] )]
+    
+
+    #Partie pourcentage_vie
+    nbr_try_mort = len( df_dps[(df_dps['Time Died'] == 1)] )
+    nbr_try = len(df_dps['Boss DPS'])
+    
+    pourcentage_vie = (1 - (nbr_try_mort / nbr_try)) * 100
+
+    stats_glo = [pourcentage_vie, nbr_try]
+    return dps, stats_glo
+
+print("Test : ")
+dico, stats_glo = dps_moyen(Joueur.instances[220996307102334976], Boss.instances['dhuum'])
+for cle, valeur in dico.items():
+    print(cle, ' : ', valeur)
+
+print(stats_glo)
+
+
 ########## Definition des embed ##########
 
 #Embed chargé lorsqu'il y a une erreur
@@ -1023,3 +1079,56 @@ def embed_role(joueur: int, boss: str):
     embed.set_image(url="attachment://mon_graphique.png")
     
     return graphique, embed
+
+def embed_dps(joueur: int, raccourcis_nom: str):
+
+    #Récupération de l'instance Boss pour le boss en question (raccourcis_nom)
+    if raccourcis_nom in Boss.instances:
+        instance_boss = Boss.instances[raccourcis_nom]
+        instance_boss: Type[Boss]
+    else:
+        log(f"| Fonction embed_dps() | Instance du boss : {raccourcis_nom} non trouvé ! ! !", 2)
+        return embed_erreur()
+
+    instance_joueur = Joueur.instances[joueur] # joueur = ID Discord
+    instance_joueur: Type[Joueur]
+
+    dico, stats_glo = dps_moyen(instance_joueur, instance_boss)
+    couleur = discord.Colour.green()
+    embed = discord.Embed(title = f"Dégat fait sur {instance_boss.nom_francais}: ", description = "", color= couleur)
+
+    embed.add_field(name = "\u200b" , value = "" , inline = False)
+    embed.set_thumbnail(url="https://i.ibb.co/rHyn3Qs/sdfsdf.png")
+
+    info_glo = f"{instance_joueur.nom_de_compte} \n"
+    info_glo += f"""Nombre de logs : {stats_glo[1]} ({dico["DPS Global Total"][1]} en vie)
+                    Nombre de try utilisé pour le calcul du DPS :
+                    ㅤㅤPower : {dico["DPS Global Power"][1]} 
+                    ㅤㅤCondi : {dico["DPS Global Condi"][1]}
+                 """
+    embed.add_field(name="Joueur: ", value= info_glo, inline=False)
+    value_all = ""
+    value_boss = ""
+
+    for cle, valeur in dico.items():
+        if "Global" in cle:
+            if not pd.isna(valeur[0]):
+                value_all += f'ㅤㅤ{cle.split()[2]} : {round(valeur[0])} dmg/s \n'
+            else:
+                value_all += f'ㅤㅤ{cle.split()[2]} : NaN \n'
+
+        if "Target" in cle:
+            if not pd.isna(valeur[0]):
+                value_boss += f'ㅤㅤ{cle.split()[2]} : {round(valeur[0])} dmg/s \n'
+            else:
+                value_boss += f'ㅤㅤ{cle.split()[2]} : NaN \n'
+    
+    embed.add_field(name="DPS Target :", value= value_boss, inline=False)
+    embed.add_field(name="DPS Total :", value= value_all, inline=False)
+
+    embed.add_field(name="Pourcentage des logs en vies :", value= f"{round(stats_glo[0],2)} %", inline=False)
+
+    embed.add_field(name="\u200b", value='', inline=False)
+
+
+    return embed
