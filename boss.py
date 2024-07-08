@@ -186,6 +186,12 @@ class Boss:
             log("Fonction : boss_en_cm() non executé ! ! !", 2)
             return -1
 
+    def nom_boss_existe(raccourcis):
+        try:
+            Boss.instances[raccourcis]
+            return True
+        except:
+            return False
 #Prend un string en entrée et renvoit une liste de lien de logs.
 def traitement_message_log(message : str):
     """
@@ -418,8 +424,8 @@ def traiterLogs(lien: str):
 
         for i in range(len(data["players"])):
             l_id_boss.append(id_boss)
-
             for e in range(len(data["phases"][0]["boonGenGroupStats"][i]["data"])):
+                print("JOUEUR n°",e)
                 valeur_du_boon = data["phases"][0]["boonGenGroupStats"][i]["data"][e]
                 if valeur_du_boon != []:
                     if valeur_du_boon[0] == 0:

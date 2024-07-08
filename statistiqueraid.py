@@ -79,8 +79,30 @@ def init_log():
         date = fichier.split('_')[0]
         nom_boss = fichier.split('_')[1]
 
-        instance_boss = Boss.instances[nom_boss]
-        instance_boss: Type[Boss]
+        if nom_boss == 'twinlargos':
+            nom_boss = 'twins'
+                    
+        if nom_boss == 'prlqadim':
+            nom_boss = 'qpeer'
+                    
+        if nom_boss == 'aetherhide':
+            nom_boss = 'trin'
+                    
+        if nom_boss == 'river':
+            nom_boss = 'rr'
+                    
+        if nom_boss == 'xunjadejunk':
+            nom_boss = 'ankka'
+                    
+        if nom_boss == 'escort':
+            nom_boss = 'esc'
+
+        if Boss.nom_boss_existe(nom_boss):
+            instance_boss = Boss.instances[nom_boss]
+            instance_boss: Type[Boss]
+        else:
+            log(f"| Fonction init_log() | Nom de fichier non reconnu: {nom_boss}, fichier suivant ! ! ! ")
+            continue
 
         if instance_boss.recherche_combat_existe_dans_Boss(date):
             log(f"| Fonction init_log() | Combat ({date}_{nom_boss}) existe déjà, fonction avorté ! !")
