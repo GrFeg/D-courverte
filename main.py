@@ -106,7 +106,7 @@ def calcul_pourcentage(csv_embed: list):
 async def on_ready():
     log(f'Le {bot.user.name} est connecté')
 
-    df_histo_message = await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
+    df_histo_message = await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 20, True, CHEMIN_HISTO_LOGS)
 
     await inscription.purge_event(bot)
     await inscription.init_schedule_thread(bot)

@@ -329,6 +329,7 @@ def traiterLogs(lien: str):
 
         #Définition du df_Stats_DPS
         wepSet2_2,wepSet2_1,wepSet1_2,wepSet1_1,dps_target_condi,dps_target_power,dmg_target_condi,dmg_target_power,dps_total_condi,dps_total_power,role,dps_total,dps_target,dmg_target,sous_groupe,profession,account,name,dmg_total,dmg_total_power,dmg_total_condi,times_downed,time_die,percent_alive,l_id_boss = [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
+
         for i in range(len(data["players"])):
             l_id_boss.append(id_boss)
             sous_groupe.append(data["players"][i]['group'])
@@ -403,8 +404,8 @@ def traiterLogs(lien: str):
                   'Percent Alive':percent_alive}
         df_dps = pd.DataFrame(df_dps)
 
-
-        boons = {740 :0,
+        #Les ID correpondant aux boons
+        dico_id_boons = {740 :0,
                 725: 1,
                 1187: 2,
                 30328: 3,
@@ -422,23 +423,39 @@ def traiterLogs(lien: str):
         l_id_boss= []
         liste_buff = [[[0] * len(data["players"]), [0] * len(data["players"])] for _ in range(12)]
 
+        liste_boon_squad = data["phases"][0]["buffsStatContainer"]["boonGenGroupStats"]
+
+        #Boucle pour chaque joueur présent dans la squad
         for i in range(len(data["players"])):
+
             l_id_boss.append(id_boss)
-            for e in range(len(data["phases"][0]["boonGenGroupStats"][i]["data"])):
-                print("JOUEUR n°",e)
-                valeur_du_boon = data["phases"][0]["boonGenGroupStats"][i]["data"][e]
-                if valeur_du_boon != []:
-                    if valeur_du_boon[0] == 0:
-                        liste_buff[boons[ordre_boon[e]]][0][i] = valeur_du_boon[0]
-                    else:
-                        liste_buff[boons[ordre_boon[e]]][0][i] = str(valeur_du_boon[0]) + "%"
+            
+            #Pour chaque boon présent dans la liste "data" (12)
+            for e in range(len(liste_boon_squad[i]["data"])):
+
+                #Récupère le boon en fonction de e
+                valeur_du_boon = liste_boon_squad[i]["data"][e] #=> [Nombre généré, ???, Wasted, ???, ???, Extended]
+
+                #Si il n'est pas vide
+                if not valeur_du_boon == []:
+
+                    boon_gen = valeur_du_boon[0]
+                    boon_wasted = valeur_du_boon[3]
+                    id_boon = dico_id_boons[ordre_boon[e]]
                     
-                    if valeur_du_boon[3] == 0:
-                        liste_buff[boons[ordre_boon[e]]][1][i] = valeur_du_boon[3]
+                    #Ajoute le nombre de boon_gen
+                    if boon_gen == 0:
+                        liste_buff[id_boon][0][i] = boon_gen
                     else:
-                        liste_buff[boons[ordre_boon[e]]][1][i] = str(valeur_du_boon[3]) + "%"
+                        liste_buff[id_boon][0][i] = str(boon_gen) + "%"
+                    
+                    #Ajoute le nombre de boon_wasted
+                    if boon_wasted == 0:
+                        liste_buff[id_boon][1][i] = boon_wasted
+                    else:
+                        liste_buff[id_boon][1][i] = str(boon_wasted) + "%"
                 else:
-                    liste_buff[boons[ordre_boon[e]]][i] = 0
+                    liste_buff[id_boon][i] = 0
         
         df_gen_group = {'ID': l_id_boss,
                         'Name': name,
@@ -474,15 +491,17 @@ def traiterLogs(lien: str):
         liste_buff = [[0] * len(data["players"]) for _ in range(12)]
         l_id_boss = [id_boss for _ in range(len(data["players"]))]
 
-        for i in range(len(data["players"])):
-            avg_boons.append(data["phases"][0]["boonStats"][i]["avg"])
+        liste_boon_uptime = data["phases"][0]["buffsStatContainer"]["boonStats"]
 
-            for e in range(len(data["phases"][0]["boonStats"][i]["data"])):
-                valeur_du_boon = data["phases"][0]["boonStats"][i]["data"][e]
+        for i in range(len(data["players"])):
+            avg_boons.append(liste_boon_uptime[i]["avg"])
+
+            for e in range(len(liste_boon_uptime[i]["data"])):
+                valeur_du_boon = liste_boon_uptime[i]["data"][e]
                 if valeur_du_boon != []:
-                    liste_buff[boons[ordre_boon[e]]][i] = valeur_du_boon[0]
+                    liste_buff[dico_id_boons[ordre_boon[e]]][i] = valeur_du_boon[0]
                 else:
-                    liste_buff[boons[ordre_boon[e]]][i] = 0
+                    liste_buff[dico_id_boons[ordre_boon[e]]][i] = 0
                     
 
         df_uptime = {'ID': l_id_boss,

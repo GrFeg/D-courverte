@@ -57,18 +57,44 @@ def lire_boss(boss):
         log(f"Fichier dans {boss} manquant, risque d'erreur probable.",2)
     return dico_df
 
+#Fonction pour les fichier parse.csv, change le nom du boss pour correspondre au raccourcis_nom
+def parse_nom_boss(boss : str):
+    if boss == 'twinlargos':
+        boss = 'twins'
+        
+    if boss == 'twstcstl':
+        boss = 'esc'
+                    
+    if boss == 'prlqadim':
+        boss = 'qpeer'
+                    
+    if boss == 'aetherhide':
+        boss = 'trin'
+                    
+    if boss == 'river':
+        boss = 'rr'
+                    
+    if boss == 'xunjadejunk':
+        boss = 'ankka'
+                    
+    if boss == 'escort':
+        boss = 'esc'
+    
+    return boss
+
 #Fonction qui va s'occuper de tout les raid parse par le logiciel.
 def init_log():
 
     #Recupère tout les fichiers d'un dossier 
     chemin_dossier = os.path.join(CHEMIN_RACINE, 'log_dps')
 
-    if os.path.isdir(chemin_dossier):
-        fichiers = os.listdir(chemin_dossier)
-    else:
-        log(f"Le dossier {chemin_dossier} n'éxiste pas !", 2)
+    #Test si le fichier existe
+    if not os.path.isdir(chemin_dossier):
+        log(f"| Fonction init_log() | Le dossier {chemin_dossier} n'éxiste pas !", 2)
         return -1
-
+    
+    #Récupère tout les fichiers present dans le dossier
+    fichiers = os.listdir(chemin_dossier)
 
     compteur = 0
     #Pour chaque fichier dans fichiers
@@ -79,29 +105,14 @@ def init_log():
         date = fichier.split('_')[0]
         nom_boss = fichier.split('_')[1]
 
-        if nom_boss == 'twinlargos':
-            nom_boss = 'twins'
-                    
-        if nom_boss == 'prlqadim':
-            nom_boss = 'qpeer'
-                    
-        if nom_boss == 'aetherhide':
-            nom_boss = 'trin'
-                    
-        if nom_boss == 'river':
-            nom_boss = 'rr'
-                    
-        if nom_boss == 'xunjadejunk':
-            nom_boss = 'ankka'
-                    
-        if nom_boss == 'escort':
-            nom_boss = 'esc'
+        #Adapte le nom du boss pour correspondre au bon raccourcis
+        nom_boss = parse_nom_boss(nom_boss)
 
         if Boss.nom_boss_existe(nom_boss):
             instance_boss = Boss.instances[nom_boss]
             instance_boss: Type[Boss]
         else:
-            log(f"| Fonction init_log() | Nom de fichier non reconnu: {nom_boss}, fichier suivant ! ! ! ")
+            log(f"| Fonction init_log() | Nom de fichier non reconnu: {nom_boss}, fichier suivant ! ! ! ", 2)
             continue
 
         if instance_boss.recherche_combat_existe_dans_Boss(date):
@@ -109,7 +120,7 @@ def init_log():
             os.remove(chemin_complet)
             continue
         else:
-            log(f"| Fonction init_log() | Combat ({date}_{nom_boss}) non trouvée, récupération logs")
+            log(f"| Fonction init_log() | Combat ({date}_{nom_boss}) non trouvée, récupération logs", 3)
 
         #Si le fichier existe
         if os.path.isfile(chemin_complet):
@@ -181,7 +192,15 @@ def init_log():
 
                 
                 #Récuperer les données qui m'intérèsse
+                if not len(df_tableau) == 25:
+                    #os.remove(chemin_complet)
+                    log(f'Nombre de DF insuffisant, log non chargé !',2)
+                    continue
+
                 del df_tableau[11:21]
+                
+
+
                 dico_tableau = {"Stats_global"    :   df_tableau[0],
                                 "Stats_DPS"       :   df_tableau[1],
                                 "Critique_cible"  :   df_tableau[2],
@@ -237,7 +256,7 @@ def init_log():
 
                 compteur += 1 
                 
-                #os.remove(chemin_complet)
+                os.remove(chemin_complet)
     return
 
 #Fonction pour afficher un graphique des rôles
