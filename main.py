@@ -1,7 +1,7 @@
 import discord
 #import tombola
 import statistiqueraid 
-import inscription
+import inscription.inscription as inscription
 import commande
 from fonction import log
 import fonction
@@ -59,7 +59,7 @@ class MonBot(commands.Bot, discord.Client):
         except:
             log('Fichier commande.py introuvable !', 2)
         try:
-            await self.load_extension("inscription")
+            await self.load_extension("inscription.inscription")
         except:
             log('Fichier inscription.py introuvable !', 2)
 
@@ -163,6 +163,9 @@ async def on_message(message : discord.Message):
 
         log(f"Pseudo de Mioune changé pour: {message_contenu}")
 
+    if "Miracolo"  in message_contenu:
+        await message.delete() #Efface le message
+        await message.channel.send("Je suis de retour pour vous jouer un mauvais tour !!! (ça veut dire que j'ai enfin rebranché mon PC !!!)")
     #Nils !
     if message_contenu =="Ah bah c'est bien Nils!":
         await message.channel.send("Ah bah oui c'est super même !")

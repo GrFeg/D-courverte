@@ -4,7 +4,7 @@ from discord import app_commands
 from fonction import log
 import fonction
 import statistiqueraid
-import inscription
+import inscription.inscription as inscription
 import csv
 import random
 from discord.ui import Button, View
@@ -69,6 +69,7 @@ class SlashCommands(commands.Cog):
             await interaction.response.send_message(embed =embed, file=file, ephemeral=False)
         else:
            await interaction.response.send_message(embed=embed)
+    
 
 
     #Commande soiree
@@ -130,6 +131,27 @@ class SlashCommands(commands.Cog):
 
         await message_vote.add_reaction('✅')
         await message_vote.add_reaction('❌')
+    
+    #Commande Inscription hebdo
+    @app_commands.command(name="inscription_hebdo", description="Faire une inscription pour la semaine.")
+    @discord.app_commands.guilds(discord.Object(id= ID_GUILD_SERVEUR_INAE))
+    async def inscription_hebdo(self, interaction: discord.Interaction, date: str):
+
+        await interaction.response.send_message(embed = inscriptions_hebdo(date))
+        message_vote = await interaction.original_response()
+
+
+        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, 0, 0, date, [[],[],[],[],[],[],[]], [0,0,0,0,0,0,0],[],0,0])
+
+        print("embed:",message_vote.id)
+
+        await message_vote.add_reaction('🇱')
+        await message_vote.add_reaction('🇲')
+        await message_vote.add_reaction('Ⓜ️')
+        await message_vote.add_reaction('🇯')
+        await message_vote.add_reaction('🇻')
+        await message_vote.add_reaction('🇸')
+        await message_vote.add_reaction('🇩')
 
 
     #Commande Excuse
@@ -169,8 +191,12 @@ class SlashCommands(commands.Cog):
     async def dps(self, interaction: discord.Interaction, boss: str):
 
         user_id = interaction.user.id
-
-        await interaction.response.send_message(embed = statistiqueraid.embed_dps(user_id, boss))
+        graphique, embed = statistiqueraid.embed_dps(user_id, boss)
+        if graphique != -1:
+            await interaction.response.send_message(embed = embed, file= graphique, ephemeral=False)
+        else:
+           await interaction.response.send_message(embed=embed)
+    
 
 
 
@@ -216,7 +242,23 @@ def inscriptions(type_de_sortie , descriptions , date , liste_joueur , nombre ):
         embed_inscription.add_field(name = "\u200b" , value = "⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜", inline = False)
 
     embed_inscription.add_field(name = "\u200b" , value = "" , inline = False)
-    
 
     return embed_inscription
 
+def inscriptions_hebdo(date):
+    log("- Fonction inscriptions_hebdo - Création de l'embed . . .")
+    
+    embed = discord.Embed(title = f"**Inscription Hebdomadaire:ㅤㅤㅤㅤ**", description ="", color=0x80ff80)
+    embed.set_thumbnail(url="https://i.ibb.co/rHyn3Qs/sdfsdf.png")
+    embed.add_field(name = "" , value = "Le but est de savoir qui est là quelle jour et en fonction on avise quand on sort !" , inline = False)
+    embed.add_field(name = "Date:" , value = date , inline = False)
+    embed.add_field(name = "\u200b" , value = "" , inline = False)
+
+
+    jour_semaine = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche']
+    for jour in jour_semaine:
+        embed.add_field(name = f"{jour}:" , value =  "ㅤㅤNombre inscris: 0", inline = False)
+
+    embed.add_field(name = "\u200b" , value = "" , inline = False)
+
+    return embed

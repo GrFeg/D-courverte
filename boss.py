@@ -56,6 +56,8 @@ class Boss:
     
     def __init__(self, nom_francais: str, nom_anglais: str, raccourcis_nom: str):
 
+        nom_francais = nom_francais.replace('Ã©','é')
+        
         self.nom_francais = nom_francais
         self.nom_anglais = nom_anglais
         self.raccourcis_nom = raccourcis_nom

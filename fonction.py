@@ -4,11 +4,31 @@ import os
 from pathlib import Path
 import json
 import pandas as pd
+import re
 
 """
 Fichier python contenant des fonction utilitaires
 
 """
+def est_emoji_valide(texte_a_tester) -> bool:
+    """
+    Renvoit True si le texte contient un Emoji, sinon renvoit False.
+    
+    Fonctionne pour detecter si un caractère dans un texte est un emoji ou bien pour tester un caractère bien précis.
+
+    ### Argument:
+    - texte_a_tester (str) : chaine de caractère a tester.
+    """
+    emoji_pattern = re.compile(
+    "[\U0001F600-\U0001F64F" #Emoticônes
+    "\U0001F300-\U0001F5FF"  #Symboles et pictogrammes divers
+    "\U0001F680-\U0001F6FF"  #Transports et symboles de carte
+    "\U0001F1E0-\U0001F1FF"  #Drapeaux
+    "\U00002700-\U000027BF"  #Divers symboles
+    "\U000024C2-\U0001F251" 
+    "]+", flags=re.UNICODE)
+
+    return bool(emoji_pattern.search(texte_a_tester))
 
 
 def fichier_existe(chemin):

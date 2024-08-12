@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import json
 from discord.ui import Button, View
 import matplotlib.pyplot as plt
+import seaborn as sns
 import pandas as pd
 import numpy as np
 import os
@@ -310,7 +311,7 @@ def joli_graphique(df : pd.DataFrame):
     # Sauvegarder l'image rognée
     cropped_image.save(CHEMIN_RACINE + '\\mon_graphique.png')
 
-    # Attachez l'image locale en utilisant un File et ajoutez-la à l'embed
+    # Attachez l'image locale en utilisant un File pour l'ajouter à un embed
     file = discord.File(CHEMIN_RACINE + "\\mon_graphique.png", filename="mon_graphique.png")
 
     return file    
@@ -732,6 +733,7 @@ def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourc
 
     return stats
 
+
 def dps_moyen(joueur: Type[Joueur], boss: Type[Boss]):
 
     #Récuperation des DF
@@ -747,10 +749,11 @@ def dps_moyen(joueur: Type[Joueur], boss: Type[Boss]):
     print('')
 
     #Filtrage avec la series
-    df_dps = boss.df_dps[boss.df_dps['ID'].isin(series_date_true)]
-    df_dps = df_dps[df_dps['Account'] == joueur.nom_de_compte]
-    df_dps = df_dps[( df_dps['Role'] == '-1' ) | ( df_dps['Role'].str.contains('Condi') )]
-    print(df_dps[['ID','Role','Time Died']])
+    df_dps = boss.df_dps[boss.df_dps['ID'].isin(series_date_true)] #Filtre la date
+    df_dps = df_dps[df_dps['Account'] == joueur.nom_de_compte] #Filtre le nom
+    df_dps = df_dps[( df_dps['Role'] == '-1' ) | ( df_dps['Role'] == ' Condi:10' ) | ( df_dps['Role'] == 'Condi:10' )] #Filtre le rôle
+    df_dps = df_dps[( df_dps['All DPS'] > 5000 )] #Filtre le DPS ?
+    print(df_dps[['ID','Role','Time Died', 'Boss DPS', 'All DPS']])
     print('')
 
     #Partie DPS
@@ -778,7 +781,7 @@ def dps_moyen(joueur: Type[Joueur], boss: Type[Boss]):
     pourcentage_vie = (1 - (nbr_try_mort / nbr_try)) * 100
 
     stats_glo = [pourcentage_vie, nbr_try]
-    return dps, stats_glo
+    return dps, stats_glo, df_dps
 
 """
 print("Test : ")
@@ -788,6 +791,23 @@ for cle, valeur in dico.items():
 
 print(stats_glo)
 """
+
+def graphique_dps(df_dps, mode):
+
+    df_dps['Role'] = df_dps['Role'].replace('Condi:10', 'Altération')
+    df_dps['Role'] = df_dps['Role'].replace(' Condi:10', 'Altération')
+    df_dps['Role'] = df_dps['Role'].replace('-1', 'Puissance')
+
+    if mode == 'all':
+        plt.clf()
+        sns.barplot(df_dps, x = 'ID', y = 'All DPS', hue= 'Role')
+        plt.xticks(rotation = 90)
+        plt.savefig('mon_graphique.png')
+
+        file = discord.File(CHEMIN_RACINE + "\\mon_graphique.png", filename="mon_graphique.png")
+        return file
+    return
+
 
 ########## Definition des embed ##########
 
@@ -1094,6 +1114,8 @@ def embed_role(joueur: int, boss: str):
 
     graphique, taille = 0,0
     for nom in Joueur.instances.values():
+        nom: Type[Joueur]
+
         if nom.id_discord == joueur:
             graphique, taille = quel_role_sur_quel_boss(boss,nom.nom_de_compte)
             break
@@ -1127,7 +1149,10 @@ def embed_role(joueur: int, boss: str):
     
     return graphique, embed
 
+
 def embed_dps(joueur: int, raccourcis_nom: str):
+
+    mode = 'all'
 
     #Récupération de l'instance Boss pour le boss en question (raccourcis_nom)
     if raccourcis_nom in Boss.instances:
@@ -1140,7 +1165,9 @@ def embed_dps(joueur: int, raccourcis_nom: str):
     instance_joueur = Joueur.instances[joueur] # joueur = ID Discord
     instance_joueur: Type[Joueur]
 
-    dico, stats_glo = dps_moyen(instance_joueur, instance_boss)
+    dico, stats_glo, df_dps = dps_moyen(instance_joueur, instance_boss)
+    graphique = graphique_dps(df_dps, mode)
+
     couleur = discord.Colour.green()
     embed = discord.Embed(title = f"Dégat fait sur {instance_boss.nom_francais}: ", description = "", color= couleur)
 
@@ -1177,5 +1204,7 @@ def embed_dps(joueur: int, raccourcis_nom: str):
 
     embed.add_field(name="\u200b", value='', inline=False)
 
+    embed.set_image(url="attachment://mon_graphique.png")
 
-    return embed
+
+    return graphique, embed
