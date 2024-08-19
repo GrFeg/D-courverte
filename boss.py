@@ -15,15 +15,19 @@ Fichier qui contient la Class Boss et toutes les fonctions touchant au combat de
 
 
 '''
-if os.path.isfile( Path('info.json')):
-    with open('info.json') as config_file:
+chemin_fichier_info = '_donnee/info.json'
+chemin_fichier_config = '_donnee/config.json'
+
+if os.path.isfile(chemin_fichier_info):
+    #Récupération des configurations du bot
+    with open(chemin_fichier_info) as config_file:
         INFO_RAID = json.load(config_file)['raid']
 else:
     log("Fichier info_raid.json introuvable", 3)
 
-if os.path.isfile( Path('config.json')):
+if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
-    with open('config.json') as config_file:
+    with open(chemin_fichier_config) as config_file:
         config = json.load(config_file)
 
     ID_JOUEUR_PIZZABLEU = config['ID_JOUEUR_PIZZABLEU']

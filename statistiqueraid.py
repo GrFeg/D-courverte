@@ -20,9 +20,12 @@ from joueur import Joueur
 from typing import Type
 
 
-if os.path.isfile( Path('config.json')):
+
+chemin_fichier_config = '_donnee/config.json'
+
+if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
-    with open('config.json') as config_file:
+    with open(chemin_fichier_config) as config_file:
         config = json.load(config_file)
 
     CHEMIN_HISTO_LOGS = '/csv/histo_logs.csv'

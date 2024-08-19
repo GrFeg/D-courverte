@@ -1,10 +1,13 @@
 import os
-from pathlib import Path
 import json
 from fonction import log
 
-if os.path.isfile( Path('info.json')):
-    with open('info.json') as config_file:
+chemin_fichier_info = '_donnee/info.json'
+
+
+if os.path.isfile(chemin_fichier_info):
+    #Récupération des configurations du bot
+    with open(chemin_fichier_info) as config_file:
         INFO_JOUEUR = json.load(config_file)['joueur']
 else:
     log("Fichier info_raid.json introuvable", 3)

@@ -7,3 +7,5 @@ mon_graphique.png
 __pycache__/
 __pycache__/statistiqueraid.cpython-312.pyc
 info.json
+bot.log
+_donnee/

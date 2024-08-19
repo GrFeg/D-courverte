@@ -47,9 +47,11 @@ DICO_EQUIVALENT_ABREGEE_NOM = {
 }
 
 
-if os.path.isfile( Path('config.json') ):
+chemin_fichier_config = '_donnee/config.json'
+
+if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
-    with open('config.json') as config_file:
+    with open(chemin_fichier_config) as config_file:
         config = json.load(config_file)
 
     CHANNEL_ID_LOGS = 892509041140588581 
@@ -162,7 +164,7 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
     numero_semaine = int( date_du_jour.strftime('%W') )
 
     #Si on est lundi RESET des infos
-    if date_du_jour.strftime("%A") == "lundi" and  int(date_du_jour.strftime("%H")) < 21: 
+    if date_du_jour.strftime("%A") == "lundi" and  int(date_du_jour.strftime("%H")) < 21 or not numero_semaine in df_boss_hebdo.index: 
 
         dico_info_raid_done = {
                 "W1" : [False, False, False],

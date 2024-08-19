@@ -1,4 +1,6 @@
 import discord
+import os
+import json
 #import tombola
 import statistiqueraid 
 import inscription.inscription as inscription
@@ -7,8 +9,6 @@ from fonction import log
 import fonction
 from discord.ext import commands
 from discord import app_commands
-import json
-import os
 from pathlib import Path
 import pandas as pd
 import seaborn as sns
@@ -16,16 +16,22 @@ import matplotlib.pyplot as plt
 import affichage_info
 import re
 from boss import ajout_lien_au_df, traitement_message_log
+from config_logger import logger
+
+
 
 '''
 Fichier où le Bot discord est initialisé
 
 '''
 
+os.chdir(os.path.dirname(__file__))
 
-if os.path.isfile( Path('config.json') ):
+chemin_fichier_config = '_donnee/config.json'
+
+if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
-    with open('config.json') as config_file:
+    with open(chemin_fichier_config) as config_file:
         config = json.load(config_file)
 
     TOKEN = config['TOKEN']
@@ -40,7 +46,7 @@ if os.path.isfile( Path('config.json') ):
     CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
 
 else:
-    log("Fichier config.json introuvable", 3)
+    logger.info("Fichier config.json introuvable")
 
 messages_liste = []
 
@@ -57,63 +63,42 @@ class MonBot(commands.Bot, discord.Client):
         try:
             await self.load_extension("commande")
         except:
-            log('Fichier commande.py introuvable !', 2)
+            logger.critical('Fichier commande.py introuvable !',)
         try:
             await self.load_extension("inscription.inscription")
         except:
-            log('Fichier inscription.py introuvable !', 2)
+            logger.critical('Fichier inscription.py introuvable !')
 
         #Synchronise les commandes avec touts les serveurs discord
         await self.tree.sync()
         #Synchronise les commandes avec le serveur INAE (plus rapide)
         await self.tree.sync(guild=discord.Object(id= ID_GUILD_SERVEUR_INAE))
 
+    async def on_ready(self):
+        logger.info(f'Le {self.user.name} est connecté')
+
+        df_histo_message = await fonction.recuperation_message(self, CHANNEL_ID_LOGS, 20, True, CHEMIN_HISTO_LOGS)
+
+        await inscription.purge_event(self)
+        await inscription.init_schedule_thread(self)
+        await inscription.recuperation_reaction_off(self)
+
+        logger.debug(f'Début récap raid')
+        await affichage_info.actualisation_embed(self, df_histo_message)
+
 bot = MonBot()
 
 
 #Calcule le % entre deux nombres de votes
-def calcul_pourcentage(csv_embed: list):
+def calcul_pourcentage(votes: list[int]) -> tuple:
     """
     Fonction utilisé pour la gestion des votes de la commande /vote
     Récupère le nombre de vote pour chaque réponse et retourne le pourcentage de personnes ayant voté pour chaque réponse
     """
-
-    vote_1 = int(csv_embed[4])
-    vote_2 = int(csv_embed[5])
-
-    if vote_1 == 0 or vote_2 == 0:
-
-        if vote_1 == 0 and vote_2 == 0:
-            vote_1p = 0
-            vote_2p = 0
-
-        elif vote_1 == 0:
-            vote_1p = 0
-            vote_2p = 100
-
-        else:
-            vote_1p = 100
-            vote_2p = 0
-
-    else:
-        vote_1p = round(vote_1 / (vote_1 + vote_2) * 100)
-        vote_2p = round(vote_2 / (vote_1 + vote_2) * 100)
-    
-    return vote_1p, vote_2p
-
-#Detecte quand le bot a démarré
-@bot.event
-async def on_ready():
-    log(f'Le {bot.user.name} est connecté')
-
-    df_histo_message = await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 20, True, CHEMIN_HISTO_LOGS)
-
-    await inscription.purge_event(bot)
-    await inscription.init_schedule_thread(bot)
-    await inscription.recuperation_reaction_off(bot)
-
-    log(f'Début récap raid', 0)
-    await affichage_info.actualisation_embed(bot, df_histo_message)
+    total = sum(votes)
+    if total == 0:
+        return 0, 0
+    return [round(vote / total * 100) for vote in votes]
 
 
 #Detecte un message envoyé

@@ -61,9 +61,11 @@ def log(message, num = 1):
     elif num == 3:
         print(message)
 
-if os.path.isfile( Path('config.json')):
+chemin_fichier_config = '_donnee/config.json'
+
+if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
-    with open('config.json') as config_file:
+    with open(chemin_fichier_config) as config_file:
         config = json.load(config_file)
 
     TOKEN = config['TOKEN']
@@ -90,7 +92,7 @@ def csv_recup(chemin: str):
 
     '''
     if fichier_existe(chemin):
-        with open(chemin, mode='r', encoding = 'utf-8') as fichier:
+        with open(CHEMIN_RACINE + "/" + chemin, mode='r', encoding = 'utf-8') as fichier:
             lecteur_csv = csv.reader(fichier)
             csv_embed = []
             for ligne in lecteur_csv:
@@ -111,7 +113,7 @@ def csv_ajout(chemin: str, contenu):
     Ajoute une ligne a un fichier csv
     '''
     if fichier_existe(chemin):
-        with open(chemin, 'a', newline='', encoding='utf-8') as csv_variable:
+        with open(CHEMIN_RACINE + "/" + chemin, 'a', newline='', encoding='utf-8') as csv_variable:
             ecrire = csv.writer(csv_variable)
             ecrire.writerow(contenu)
 

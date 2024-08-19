@@ -21,9 +21,13 @@ Fichier ou va se trouver le nom de toutes les commandes du bot Discord
 
 '''
 
-if os.path.isfile( Path('config.json')):
+os.chdir(os.path.dirname(__file__))
+
+chemin_fichier_config = '_donnee/config.json'
+
+if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
-    with open('config.json') as config_file:
+    with open(chemin_fichier_config) as config_file:
         config = json.load(config_file)
 
     ID_GUILD_SERVEUR_INAE = config['ID_GUILD_SERVEUR_INAE']

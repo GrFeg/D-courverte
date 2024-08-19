@@ -36,9 +36,13 @@ async def setup(bot):
     bot.add_listener(reaction_add, 'on_raw_reaction_add')
 
 #Initialisation des variables
-if os.path.isfile( Path('config.json') ):
+os.chdir(os.path.dirname(__file__))
+
+chemin_fichier_config = '../_donnee/config.json'
+
+if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
-    with open('config.json') as config_file:
+    with open(chemin_fichier_config) as config_file:
         config = json.load(config_file)
 
     ID_BOT = config['ID_BOT']
@@ -103,6 +107,7 @@ async def purge_event(bot):
 
     #Récupère le fichier sous forme de df
     df_evenement = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT)
+    print("Réussis :)")
 
     #Pour chaque ligne du df
     for indexe, event in df_evenement.iterrows():
