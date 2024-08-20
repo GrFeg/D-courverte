@@ -198,10 +198,11 @@ class Boss:
             return True
         except:
             return False
+
 #Prend un string en entrée et renvoit une liste de lien de logs.
-def traitement_message_log(message : str):
+def traitement_message_log(message : str) -> list[str]:
     """
-    Fonction qui renvoit une liste des différents lien du message discord en entrée.
+    Fonction qui isole les liens dps.report et les renvoit sous forme de liste
     """
     liste_log =  re.findall(r"https://dps.report/[\w]+-20[0-9]+-[0-9]+_[a-z]{2,5}", message)
 
