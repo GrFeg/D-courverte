@@ -25,7 +25,28 @@ handler.setFormatter(colorlog.ColoredFormatter(
     }
 ))
 
-# Configuration du logger avec le handler coloré
+#Configuration du logger de mon code
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+
+
+requests_logger = logging.getLogger('requests')
+requests_logger.setLevel(logging.WARNING)
+requests_logger.addHandler(handler)
+
+requests_logger = logging.getLogger('seaborn')
+requests_logger.setLevel(logging.WARNING)
+requests_logger.addHandler(handler)
+
+requests_logger = logging.getLogger('matplotlib')
+requests_logger.setLevel(logging.WARNING)
+requests_logger.addHandler(handler)
+
+requests_logger = logging.getLogger('discord')
+requests_logger.setLevel(logging.WARNING)
+requests_logger.addHandler(handler)
+
+pillow_logger = logging.getLogger('PIL')
+pillow_logger.setLevel(logging.WARNING) 
+pillow_logger.addHandler(handler)
