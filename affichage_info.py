@@ -1,7 +1,6 @@
 import os
-from pathlib import Path
 import json
-from fonction import log
+from config_logger import logger
 from datetime import datetime
 import locale
 import discord
@@ -57,13 +56,12 @@ if os.path.isfile(chemin_fichier_config):
     CHANNEL_ID_LOGS = 892509041140588581 
     ID_CHANNEL_TEST = config['ID_CHANNEL_TEST']
     CHEMIN_BOSS_HEBDO = 'csv/boss_done_hebdo.csv'
-    CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
 
     locale.setlocale(locale.LC_TIME, 'fr_FR')
     date_du_jour = datetime.now()
 
 else:
-    log("Fichier config.json introuvable", 3)
+    logger.critical("affichage_info Fichier config.json introuvable")
 
 #Renvoit True or False si le boss est mort ou non
 def test_si_boss_mort(lien: str):
@@ -79,11 +77,23 @@ def test_si_boss_mort(lien: str):
 
     return boss.boss_mort_ou_vivant(date_essais)
 
+#Fonction qui initialise la ligne de la semaine en cours à False si la ligne n'existe pas, sinon rien.
+def init_semaine_df():
+    
+    df_boss_hebdo = pd.read_csv(CHEMIN_BOSS_HEBDO, index_col = 'num_sem')
+    numero_semaine = int( date_du_jour.strftime('%W') )
+    
+    if not numero_semaine in df_boss_hebdo.index:
+        logger.debug(f"Semaine: {numero_semaine} non trouvée dans le df, initialisation de la ligne à False")
+        df_boss_hebdo.loc[numero_semaine] = [False] * len(df_boss_hebdo.columns)
+    
+    df_boss_hebdo.to_csv(CHEMIN_BOSS_HEBDO)
+
 #Fonction qui va actualiser le fichier Boss_done_hebdo en fonction des boss tombé dans hsito_log
 def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
 
     #Recupère le fichier boss_done_hebdo
-    df_boss_hebdo = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_BOSS_HEBDO, index_col = 'num_sem')
+    df_boss_hebdo = pd.read_csv(CHEMIN_BOSS_HEBDO, index_col = 'num_sem')
 
     #Pour chaque ligne de df_histo_mesage
     for _, ligne in df_histo_message.iterrows():
@@ -105,13 +115,13 @@ def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
                     df_boss_hebdo.at[numero_semaine, ligne['boss']] = True
     
              else:
-                  log( f"Boss non trouvé {ligne['boss']}", 2 )
+                  logger.debug( f"Boss non trouvé {ligne['boss']}", 2 )
     
     #Remplace toutess les valeurs nulle par False
     df_boss_hebdo = df_boss_hebdo.fillna("False")
     
     #Enregistre le df
-    df_boss_hebdo.to_csv(CHEMIN_RACINE + "/" + CHEMIN_BOSS_HEBDO)
+    df_boss_hebdo.to_csv(CHEMIN_BOSS_HEBDO)
 
     return df_boss_hebdo
 
@@ -159,7 +169,7 @@ def embed_quel_raids(dico_info_raid_done: dict):
 
 #Fonction pour acutaliser l'embed recap_hebdo
 async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
-
+    print("prout")
     df_boss_hebdo = ajout_boss_hebdo_via_histo(df_histo_message)
     numero_semaine = int( date_du_jour.strftime('%W') )
 
@@ -194,7 +204,7 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
         message = await channel.fetch_message( 1252744415370285056 ) #Message embed déjà envoyé A automatiser ! ! ! ! !
         message_trouve = True
     except:
-        log("Fonction actualisation_embed : EMBED ou CHANNEL non trouvé ! ! !", 2)
+        logger.error("Fonction actualisation_embed : EMBED ou CHANNEL non trouvé ! ! !")
         message_trouve = False
 
     if not message_trouve:
