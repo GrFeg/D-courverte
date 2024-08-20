@@ -1,17 +1,4 @@
-import os
-import json
-from fonction import log
-
-chemin_fichier_info = '_donnee/info.json'
-
-
-if os.path.isfile(chemin_fichier_info):
-    #Récupération des configurations du bot
-    with open(chemin_fichier_info) as config_file:
-        INFO_JOUEUR = json.load(config_file)['joueur']
-else:
-    log("Fichier info_raid.json introuvable", 3)
-
+from config_logger import logger
 
 class Joueur:
 
@@ -71,13 +58,10 @@ class Joueur:
 
     liste_joueurs = classmethod(liste_joueurs)
 
-
 #Definition des boss présent dans le jeu
 def init_instances_joueur(INFO_JOUEUR):
     for joueur in INFO_JOUEUR.values():
         Joueur(joueur['nom_discord'], joueur['nom_de_compte'], joueur['ID_DISCORD'])
     
 
-    log(f"Les objets Joueur sont bien crées, nombre crée: {Joueur.nombre_joueurs}", 1)
-
-init_instances_joueur(INFO_JOUEUR)
+    logger.info(f"Nombre d'instance de Joueur crée: {Joueur.nombre_joueurs}")

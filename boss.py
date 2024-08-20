@@ -3,6 +3,7 @@ import os
 import json
 from datetime import datetime
 from fonction import log
+from config_logger import logger
 from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
@@ -23,7 +24,7 @@ if os.path.isfile(chemin_fichier_info):
     with open(chemin_fichier_info) as config_file:
         INFO_RAID = json.load(config_file)['raid']
 else:
-    log("Fichier info_raid.json introuvable", 3)
+    log("boss, Fichier info_raid.json introuvable", 3)
 
 if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
@@ -589,10 +590,6 @@ def init_instances_boss():
     Boss('Mai trin','Mai trin','trin')
     Boss('Ankka','Ankka','ankka')
 
-    log(f"| Fonction init_instances_boss() | Les Instances Boss sont bien crées, nombre crée: {Boss.nbr_boss}", 1)
+    logger.info(f"Nombre d'instance de Boss crée: {Boss.nbr_boss}")
 
 
-
-
-
-init_instances_boss()
