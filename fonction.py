@@ -82,7 +82,7 @@ if os.path.isfile(chemin_fichier_config):
     CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
 
 else:
-    log("Fichier config.json introuvable", 3)
+    log("fonction, Fichier config.json introuvable", 3)
 
 
 def csv_recup(chemin: str):
