@@ -7,7 +7,6 @@ import fonction
 import affichage_info
 import seaborn as sns
 import matplotlib.pyplot as plt
-from main import bot
 
 """
 Fichier python qui gère l'evènement on_message de discord. Cet évènement detecte chaque envoit de message sur le serveur discord.
@@ -33,7 +32,7 @@ if os.path.isfile(chemin_fichier_config):
     CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
 
 else:
-    logger.info("Fichier config.json introuvable")
+    logger.info("discord_on_message Fichier config.json introuvable ")
 
 
 
@@ -48,7 +47,7 @@ async def changement_pseudo(message: discord.Message, id_utilisateur: int):
     logger.info(f"Pseudo de Mioune changé pour: {message_contenu}")
 
 #Fonction qui traite le message, extrait les lien dps.report et les traite (ajout au df, affichage)
-async def traitement_message_envoye_log(message: discord.Message):
+async def traitement_message_envoye_log(bot, message: discord.Message):
     
     #Récupère les liens dps.report
     liste_logs = traitement_message_log(message.content)
@@ -99,8 +98,7 @@ async def affichage_graphique(message: discord.Message):
     
 
 #Detecte un message envoyé
-@bot.event
-async def on_message(message : discord.Message):
+async def message_discord(bot, message : discord.Message):
 
     #Définition des variables
     channel_nom = message.channel.name
@@ -113,11 +111,11 @@ async def on_message(message : discord.Message):
 
     #Test si le chanel est le canal des logs
     if channel_id == CHANNEL_ID_LOGS:
-        traitement_message_envoye_log(message)
+        await traitement_message_envoye_log(bot, message)
 
     #Changer le pseudo de mioune
     if "Mioune"  in message_contenu:
-        changement_pseudo(message, ID_BOT_MIOUNE)
+        await changement_pseudo(message, ID_BOT_MIOUNE)
 
     #Nils !
     if message_contenu =="Ah bah c'est bien Nils!":
@@ -128,4 +126,4 @@ async def on_message(message : discord.Message):
         await message.add_reaction('💩')
 
     if "graphq"  in message_contenu:
-        affichage_graphique(message)
+        await affichage_graphique(message)
