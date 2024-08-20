@@ -1,15 +1,12 @@
-import discord
-from discord.ext import commands
 import fonction
 from fonction import log, est_emoji_valide
 import ast
 import json
-from pathlib import Path
 import os
 from datetime import datetime
 import locale
 import threading
-import schedule # type: ignore
+import schedule 
 import time
 import pandas as pd
 import asyncio
@@ -35,10 +32,8 @@ async def setup(bot):
         await on_raw_reaction_add(payload, bot)
     bot.add_listener(reaction_add, 'on_raw_reaction_add')
 
-#Initialisation des variables
-os.chdir(os.path.dirname(__file__))
 
-chemin_fichier_config = '../_donnee/config.json'
+chemin_fichier_config = '_donnee/config.json'
 
 if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
