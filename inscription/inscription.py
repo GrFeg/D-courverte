@@ -11,6 +11,7 @@ import time
 import pandas as pd
 import asyncio
 from inscription.embed import embed_inscription_semaine, embed_inscriptions
+from config_logger import logger
 
 """
 Fichier python qui gère la commande discord /inscription
@@ -107,6 +108,9 @@ async def purge_event(bot):
     #Pour chaque ligne du df
     for indexe, event in df_evenement.iterrows():
 
+        if not event['type'] == 0:
+            break
+        
         #Si l'évènement n'est pas terminé
         if event['event_terminer'] == 0:
 
@@ -230,8 +234,19 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
     #Test si l'émoji est un emoji utilisé pour la l'inscription classiquo
     if emoji == "✅" or emoji == "❌":
         if emoji == "✅":
-
-            liste_joueur_inscris = ast.literal_eval(df_event.loc[df_event['id'] == id_message, 'present'].iloc[0])
+            
+            #Test pour debug en attendant que l'erreur se reproduise :)
+            try:
+                liste_joueur_inscris = ast.literal_eval(df_event.loc[df_event['id'] == id_message, 'present'].iloc[0])
+            except:
+                logger.error("Erreur lors de la tentative de récuperation de la liste des joueurs présent !")
+                logger.debug(f"ID du message: {id_message}")
+                logger.debug(f"df_event:")
+                logger.debug(f"{df_event}")
+                logger.debug(f"Ligne recherché:")
+                logger.debug(f"{df_event.loc[df_event['id'] == id_message]}")
+                
+                return False
 
             #Test si l'argument nom n'est pas dans la liste des joueurs inscrit
             if not nom in liste_joueur_inscris:
@@ -350,7 +365,10 @@ async def recuperation_reaction_off(bot):
                     print('')
                     print(f"Emoji: {reaction.emoji}, Réactions: {reaction.count} pour message {message.id}")
 
-                    actu_csv_varaible(reaction.emoji, user.global_name, message.id)
+                    resultat = actu_csv_varaible(reaction.emoji, user.global_name, message.id)
+                    
+                    if not resultat:
+                        logger.error("Risque d'erreur sur la récupération reaction ! ! !")
 
                     df_message = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
                     ligne = df_message[df_message['id'] == message.id]
@@ -404,7 +422,10 @@ async def on_raw_reaction_add(payload, bot):
         if int(csv_embed[n_embed][0]) == message.id and n_embed != -1:
 
             #Actualise le csv_varaible
-            actu_csv_varaible(emoji.name, payload.member.global_name, message.id)
+            resultat = actu_csv_varaible(emoji.name, payload.member.global_name, message.id)
+            
+            if not resultat:
+                        logger.error("Risque d'erreur sur la récupération reaction ! ! !")
 
             if emoji.name  == "✅" or emoji.name  == "❌":
                 #Récupère le csv pour l'embed inscriptions
