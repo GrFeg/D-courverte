@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from fonction import log
 import fonction
-import statistiqueraid
+import commande.recap_raid.statistiqueraid as statistiqueraid
 import random
 from discord.ui import Button, View
 
@@ -65,9 +65,9 @@ class SlashCommands(commands.Cog):
         joueur = interaction.user.id
         file, embed = statistiqueraid.embed_role(joueur, boss)
         if file != -1:
-            await interaction.response.send_message(embed =embed, file=file, ephemeral=False)
+            await interaction.response.send_message(embed = embed, file=file, ephemeral=False)
         else:
-           await interaction.response.send_message(embed=embed)
+           await interaction.response.send_message(embed= embed)
     
 
 
@@ -124,7 +124,7 @@ class SlashCommands(commands.Cog):
         message_vote = await interaction.original_response()
 
 
-        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, type_de_sortie, description, date, [],0,[],0,0])
+        fonction.csv_ajout('csv/varaible.csv', [message_vote.id,0, type_de_sortie, description, date, [],0,[],0,0])
 
         print("embed:",message_vote.id)
 
@@ -140,7 +140,7 @@ class SlashCommands(commands.Cog):
         message_vote = await interaction.original_response()
 
 
-        fonction.csv_ajout('csv/varaible.csv', [message_vote.id, 0, 0, date, [[],[],[],[],[],[],[]], [0,0,0,0,0,0,0],[],0,0])
+        fonction.csv_ajout('csv/varaible.csv', [message_vote.id,1, 0, 0, date, [[],[],[],[],[],[],[]], [0,0,0,0,0,0,0],[],0,0])
 
         print("embed:",message_vote.id)
 
