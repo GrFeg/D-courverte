@@ -10,10 +10,12 @@ from commande.vote import ajout_reaction, suppression_reaction
 from fonction import recuperation_message
 from boss import init_instances_boss
 from joueur import init_instances_joueur
+from commande.recap_raid.init_log import init_log
+
 
 
 '''
-Fichier où le Bot discord est initialisé
+Fichier où le Bot discord est initialisé ainsi que les fonctions init des différents bloc du bot
 
 '''
 
@@ -35,7 +37,7 @@ if os.path.isfile(chemin_fichier_config):
 
     CHANNEL_ID_LOGS = 892509041140588581 
     CHEMIN_HISTO_LOGS = 'csv/histo_logs.csv'
-    CHEMIN_RACINE = script_dir = os.path.dirname(__file__)
+    CHEMIN_RACINE = os.path.dirname(__file__)
 
 else:
     logger.info("Main ! Fichier config.json introuvable")
@@ -51,18 +53,24 @@ else:
     logger.critical("Fichier info_raid.json introuvable")
 
 
-
+#Initalisation des init() des différents fichiers python
 def init():
     logger.debug("Démarrage Initialisation")
 
-    init_semaine_df()
-    logger.info("Affichage info Initialisé")
+    result = init_semaine_df()
+    if result:
+        logger.info("Affichage info Initialisé")
+    
+    result = init_log()
+    if result:
+        logger.info("init log Initialisé")
 
     logger.info("Boss() Initialisé")
     init_instances_boss()
     
     logger.info("Joueur() Initialisé")
     init_instances_joueur(INFO_JOUEUR)
+    
 
 
 init()
@@ -79,11 +87,11 @@ class MonBot(commands.Bot, discord.Client):
         try:
             await self.load_extension("discord_commande")
         except:
-            logger.critical('Fichier discord_commande.py introuvable !',)
+            logger.critical('Erreur lors du chargement de discord_commande.py !',)
         try:
             await self.load_extension("inscription.inscription")
         except:
-            logger.critical('Fichier inscription.py introuvable !')
+            logger.critical('Erreur lors du chargement de inscription.py !')
 
         #Synchronise les commandes avec touts les serveurs discord
         await self.tree.sync()
