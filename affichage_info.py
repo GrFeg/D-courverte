@@ -88,6 +88,8 @@ def init_semaine_df():
         df_boss_hebdo.loc[numero_semaine] = [False] * len(df_boss_hebdo.columns)
     
     df_boss_hebdo.to_csv(CHEMIN_BOSS_HEBDO)
+    
+    return True
 
 #Fonction qui va actualiser le fichier Boss_done_hebdo en fonction des boss tombé dans hsito_log
 def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
