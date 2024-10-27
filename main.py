@@ -1,24 +1,26 @@
 import discord
 import os
 import json
+import threading
 import inscription.inscription as inscription
 from discord.ext import commands
-from affichage_info import actualisation_embed, init_semaine_df
+from affichage_info import init_semaine_df
 from config_logger import logger
-from discord_on_message import message_discord
-from commande.vote import ajout_reaction, suppression_reaction
-from fonction import recuperation_message
 from boss import init_instances_boss
 from joueur import init_instances_joueur
 from commande.recap_raid.init_log import init_log
+from discord.ui import Button, View
+import bot_instance
+from api import run_api
 
+espace = "ㅤㅤㅤㅤㅤ" #Ligne conserver pour avoir le caractère " " ^^
 
 
 '''
 Fichier où le Bot discord est initialisé ainsi que les fonctions init des différents bloc du bot
 
 '''
-
+print("")
 os.chdir(os.path.dirname(__file__))
 
 chemin_fichier_config = '_donnee/config.json'
@@ -53,8 +55,19 @@ else:
     logger.critical("Fichier info_raid.json introuvable")
 
 
+async def test(bot : bot_instance.MonBot, data, channel_id):
+    channel = bot.get_channel(channel_id)
+    await channel.send(data["Test"])
+    
+def testo(data, channel_id):
+    test(bot, data, channel_id)
+
+def init_api():
+    flask_thread = threading.Thread(target=run_api)
+    flask_thread.start()
+
 #Initalisation des init() des différents fichiers python
-def init():
+def init(): 
     logger.debug("Démarrage Initialisation")
 
     result = init_semaine_df()
@@ -71,57 +84,12 @@ def init():
     logger.info("Joueur() Initialisé")
     init_instances_joueur(INFO_JOUEUR)
     
-
-
-init()
-
-#Definir la class MonBot
-class MonBot(commands.Bot, discord.Client):
-    def __init__(self):
-        intents = discord.Intents.all()
-        super().__init__(command_prefix="!", intents=intents)
-
-    async def setup_hook(self):
-
-        #Pour récuperer la commande dans le fichier "commande"
-        try:
-            await self.load_extension("discord_commande")
-        except:
-            logger.critical('Erreur lors du chargement de discord_commande.py !',)
-        try:
-            await self.load_extension("inscription.inscription")
-        except:
-            logger.critical('Erreur lors du chargement de inscription.py !')
-
-        #Synchronise les commandes avec touts les serveurs discord
-        await self.tree.sync()
-        #Synchronise les commandes avec le serveur INAE (plus rapide)
-        await self.tree.sync(guild=discord.Object(id= ID_GUILD_SERVEUR_INAE))
-
-    async def on_ready(self):
-        logger.info(f'Le {self.user.name} est connecté')
-
-        df_histo_message = await recuperation_message(self, CHANNEL_ID_LOGS, 20, True, CHEMIN_HISTO_LOGS)
-
-        await inscription.purge_event(self)
-        await inscription.init_schedule_thread(self)
-        await inscription.recuperation_reaction_off(self)
-
-        logger.debug(f'Début récap raid')
-        await actualisation_embed(self, df_histo_message)
     
-    #Detection de message
-    async def on_message(self, message : discord.Message):
-        await message_discord(self, message)
+if __name__ == "__main__":
+
+    init_api()
+    init()
+
+    bot = bot_instance.bot
     
-    async def on_raw_reaction_add(self, payload):
-        await ajout_reaction(self, payload)
-    
-    async def on_raw_reaction_remove(self, payload):
-        await suppression_reaction(self, payload)
-
-
-
-bot = MonBot()
-
-bot.run(TOKEN)
+    bot.run(TOKEN)
