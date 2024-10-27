@@ -110,14 +110,15 @@ def ajout_boss_hebdo_via_histo(df_histo_message: pd.DataFrame):
              #Si le boss existe dans la liste des abréviations
              if ligne['boss'] in DICO_EQUIVALENT_ABREGEE_NOM:
                 
-                 print(ligne['logs'])
+                 logger.debug(ligne['logs'])
 
                  if test_si_boss_mort(ligne['logs']):
                     #Met ce boss à True (car tombé) 
                     df_boss_hebdo.at[numero_semaine, ligne['boss']] = True
+                
     
              else:
-                  logger.debug( f"Boss non trouvé {ligne['boss']}", 2 )
+                  logger.debug(f"Boss non trouvé {ligne['boss']}")
     
     #Remplace toutess les valeurs nulle par False
     df_boss_hebdo = df_boss_hebdo.fillna("False")
@@ -214,11 +215,3 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
     else:
             await message.edit( embed  = embed )
               
-        
-
-
-
-
-
-
-    
