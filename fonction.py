@@ -1,10 +1,10 @@
 from datetime import datetime
 import csv
 import os
-from pathlib import Path
 import json
 import pandas as pd
 import re
+from config_logger import logger, SUCCESS
 
 """
 Fichier python contenant des fonction utilitaires
@@ -105,7 +105,7 @@ def csv_recup(chemin: str):
     
     else:
 
-        log(f"Le fichier {chemin} n'existe pas ! !", 2)
+        logger.log(SUCCESS, f"Le fichier {chemin} n'existe pas ! !")
 
 
 def csv_ajout(chemin: str, contenu):
@@ -119,11 +119,11 @@ def csv_ajout(chemin: str, contenu):
 
         nom_du_csv = chemin.split('/')
         nom_du_csv = nom_du_csv[-1]
-        log(f"CSV {nom_du_csv} rajouté",0)
+        logger.debug(f"CSV {nom_du_csv} rajouté")
 
     else:
 
-        log(f"Le fichier {chemin} n'existe pas ! !", 2)
+        logger.error(f"Le fichier {chemin} n'existe pas ! !")
 
 
 def csv_actu(chemin: str, contenu: list):
@@ -139,11 +139,11 @@ def csv_actu(chemin: str, contenu: list):
 
         nom_du_csv = chemin.split('/')
         nom_du_csv = nom_du_csv[-1]
-        log(f"CSV {nom_du_csv} remplacé",0)
+        logger.debug(f"CSV {nom_du_csv} remplacé")
     
     else:
 
-        log(f"Le fichier {chemin} n'existe pas ! !", 2)
+        logger.log(SUCCESS,f"Le fichier {chemin} n'existe pas ! !")
 
 #Recherche si l'id d'un embed existe
 def recherche_embed(csv_embed, embed_id):
@@ -195,7 +195,7 @@ async def recuperation_message(bot, channel_id, nbr_messages,
             df_historique_logs.to_csv(CHEMIN_RACINE + '/' + chemin_csv, index= False)
 
 
-        log("Messages logs recupérés")  
+        logger.debug("Messages logs recupérés")  
         return df_historique_logs
     
     elif channel_id == ID_CHANNEL_EVENT or channel_id == ID_CHANNEL_TEST:
@@ -211,7 +211,7 @@ async def recuperation_message(bot, channel_id, nbr_messages,
 
             dico = {'message' : liste_message} 
 
-            log("Messages evenement recupérés")
+            logger.debug("Messages evenement recupérés")
             return pd.DataFrame(dico)
 
 async def recuperation_id_message(bot, channel_id, nbr_messages):
