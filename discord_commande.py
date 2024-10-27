@@ -4,9 +4,9 @@ from discord import app_commands
 from fonction import log
 import fonction
 import commande.recap_raid.statistiqueraid as statistiqueraid
+from commande.benchmark import embed_benchmark
 import random
 from discord.ui import Button, View
-
 import os
 import json
 
@@ -19,12 +19,18 @@ Fichier ou va se trouver le nom de toutes les commandes du bot Discord
 
 
 chemin_fichier_config = '_donnee/config.json'
+chemin_fichier_shonen = '_donnee/shonen.json'
 
 if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
     with open(chemin_fichier_config) as config_file:
         config = json.load(config_file)
 
+    with open(chemin_fichier_shonen, encoding='utf-8') as config_file:
+        shonen = json.load(config_file)
+    
+    shonen = shonen["phrase"]
+    
     ID_GUILD_SERVEUR_INAE = config['ID_GUILD_SERVEUR_INAE']
 
 else:
@@ -33,13 +39,66 @@ else:
 
 message_ids = {}
 
+#Bouton
+class Bouton(View):
+    
+    def __init__(self, label, custom_id):
+        super().__init__(timeout=None)
+        button = Button(label=label, style=discord.ButtonStyle.primary, custom_id=custom_id)
+        button.callback = self.button_callback
+        self.add_item(button)
+    
+    async def button_callback(self, interaction: discord.Interaction):
+        print("Bip")
 
+class BoutonSoiree(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.mec = False 
+
+        self.bouton_suivant = Button(label="Boss suivant", style=discord.ButtonStyle.primary, custom_id="suivant")
+        self.bouton_mecanique = Button(label="Mécaniques", style=discord.ButtonStyle.primary, custom_id="mecanique")
+        self.bouton_precedent = Button(label="Boss précédent", style=discord.ButtonStyle.primary, custom_id="precedent")
+
+        self.add_item(self.bouton_precedent)
+        self.add_item(self.bouton_mecanique)
+        self.add_item(self.bouton_suivant)
+
+        self.bouton_suivant.callback = self.button_callback
+        self.bouton_mecanique.callback = self.button_callback
+        self.bouton_precedent.callback = self.button_callback
+
+    async def button_callback(self, interaction: discord.Interaction):
+        if interaction.data['custom_id'] == "mecanique":
+            self.mec = not self.mec
+            new_label = "Rôle" if self.mec else "Mécaniques"
+            self.bouton_mecanique.label = new_label
+
+        if interaction.data['custom_id'] == "suivant":
+            await interaction.response.edit_message(embed=statistiqueraid.embed_soiree(1, self.mec), view=self)
+        elif interaction.data['custom_id'] == "precedent":
+            await interaction.response.edit_message(embed=statistiqueraid.embed_soiree(-1, self.mec), view=self)
+        elif interaction.data['custom_id'] == "mecanique":
+            await interaction.response.edit_message(embed=statistiqueraid.embed_soiree(0, self.mec), view=self)
+      
+        
 
 #Definition de la   class   commande
 class SlashCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @app_commands.command(name="bouton", description="Prouuuut")
+    @discord.app_commands.guilds(discord.Object(id= ID_GUILD_SERVEUR_INAE))
+    async def bouton(self, interaction: discord.Interaction):
+        view1 = Bouton("Bouton 1", "button_1")
+        view2 = Bouton("Bouton 2", "button_2")
+        
+        combined_view = View(timeout=None)
+        combined_view.add_item(view1.children[0])
+        combined_view.add_item(view2.children[0])
+        
+        await interaction.response.send_message("Arriva", view = combined_view ) 
 
     #Commande Statistique de raid
     @app_commands.command(name="statistique", description="Renvoit les statistiques du dernier raid.")
@@ -77,44 +136,20 @@ class SlashCommands(commands.Cog):
     async def soiree(self, interaction: discord.Interaction):
         await interaction.response.send_message("J'utilise mon neuronne pour réfléchir niaaaaaaaaa")
         embed = statistiqueraid.embed_soiree(0, False)
+   
+        view = BoutonSoiree()
 
-        async def bouton_callback(interaction: discord.Interaction):
-            if interaction.data['custom_id'] == "mecanique":
-                if bouton2.label == "Mécaniques":
-                    mec = True
-                    bouton2.label = "Rôle"
-                else:
-                    mec = False
-                    bouton2.label = "Mécaniques"
-            else:
-                if bouton2.label == "Mécaniques":
-                    mec = False
-                else:
-                    mec = True
-
-
-            if interaction.data['custom_id'] == "suivant":
-                await interaction.response.edit_message(embed = statistiqueraid.embed_soiree(1,mec), view =  view)
-            elif interaction.data['custom_id'] == "precedent":
-                await interaction.response.edit_message(embed = statistiqueraid.embed_soiree(-1,mec), view =  view)
-
-            elif interaction.data['custom_id'] == "mecanique":
-                await interaction.response.edit_message(embed = statistiqueraid.embed_soiree(0,mec), view =  view)
-
-
-        bouton1 = Button(label="Boss Suivant", style=discord.ButtonStyle.primary, custom_id="suivant")
-        bouton1.callback = bouton_callback
-        bouton2 = Button(label="Mécaniques", style=discord.ButtonStyle.primary, custom_id="mecanique")
-        bouton2.callback = bouton_callback
-        bouton3 = Button(label="Boss Précedent", style=discord.ButtonStyle.primary, custom_id="precedent")
-        bouton3.callback = bouton_callback
-        view = View(timeout = None)
-        view.add_item(bouton3)
-        view.add_item(bouton2)
-        view.add_item(bouton1)
         await interaction.edit_original_response(content = "",embed = embed, view =  view)  
 
-
+    #Commande benchamrk
+    @app_commands.command(name="benchmark", description="Affiche le Top 10 des DPS")
+    @discord.app_commands.guilds(discord.Object(id= ID_GUILD_SERVEUR_INAE))
+    async def benchmark(self, interaction: discord.Interaction):
+        await interaction.response.send_message("J'utilise mon neuronne pour réfléchir niaaaaaaaaa")
+        embed = embed_benchmark()
+        await interaction.edit_original_response(content = "",embed = embed)
+        
+        
     #Commande Inscription
     @app_commands.command(name="inscription", description="Faire une inscription pour un évènement.")
     @discord.app_commands.guilds(discord.Object(id= ID_GUILD_SERVEUR_INAE))
@@ -195,6 +230,12 @@ class SlashCommands(commands.Cog):
             await interaction.response.send_message(embed = embed, file= graphique, ephemeral=False)
         else:
            await interaction.response.send_message(embed=embed)
+    
+    #Commande Espoir
+    @app_commands.command(name="espoir", description="Si tu es triste, tape cette commande, elle te donnera le courage nécessaire")
+    @discord.app_commands.guilds(discord.Object(id= ID_GUILD_SERVEUR_INAE))
+    async def espoir(self, interaction: discord.Interaction):
+        await interaction.response.send_message(random.choice(shonen))
     
 
 
