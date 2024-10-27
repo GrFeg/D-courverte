@@ -11,7 +11,9 @@ import time
 import pandas as pd
 import asyncio
 from inscription.embed import embed_inscription_semaine, embed_inscriptions
-from config_logger import logger
+from config_logger import logger, SUCCESS
+import discord
+import bot_instance
 
 """
 Fichier python qui gère la commande discord /inscription
@@ -21,7 +23,7 @@ Gère les evenements terminés et les supprime du canal. Récupère les réactgi
 """
 
 #Fonction setup qui va définir quel type de bot.event sont utilisé dans ce fichier
-async def setup(bot):
+async def setup(bot : bot_instance.MonBot):
 
     #Detection de suppression d'une réaction sur un message
     async def reaction_remove(payload):
@@ -52,7 +54,28 @@ if os.path.isfile(chemin_fichier_config):
     date_du_jour = datetime.now()
     nom_du_jour = date_du_jour.strftime("%A")
 else:
-    log("Fichier config.json introuvable", 3)
+    logger.critical("Fichier config.json introuvable")
+
+#Test si l'user sur le serveur guild a le rôle training cm
+def test_si_ht_cm(bot : bot_instance.MonBot, guild_id, user_id):
+    """
+    Test si le joueur (user_id) renseigné en entré a le rôle discord 'Training cm'.
+    ### Arguments :
+    - bot
+    - guild_id
+    - user_id
+    
+    ### Renvoie:
+    - Bool
+    """
+    guild = bot.get_guild(guild_id)
+    member = guild.get_member(user_id)
+    
+    role = discord.utils.get(guild.roles, name= 'Training cm')
+    if role in member.roles:
+        return True
+    else:
+        return False
 
 #Fonction pour trouver le jour dans une chaine de caractère
 def trouver_jour(date: str):
@@ -89,21 +112,21 @@ def trouver_jour(date: str):
             delta = num_jour_trouve - num_jour_actuel
             return delta
         else:
-            log(f"| Fonction trouver_jour | Jour de la semaine déjà passé: {jour_trouve}")
+            logger.debug(f"Jour de la semaine déjà passé: {jour_trouve}")
             return -5
     
     else:
-        log(f"| Fonction trouver_jour | Jour de la semaine non reconnu ({date})", 2)
+        logger.log(SUCCESS, f"Jour de la semaine non reconnu ({date})")
     
     return "erreur"
 
 #Fonction pour supprimer les evenement terminés
-async def purge_event(bot):
-    log('| Fonction purge_event | Démarrage . . . ', 0)
+async def purge_event(bot : bot_instance.MonBot):
+    print("")
+    logger.debug('Début de la fonction')
 
     #Récupère le fichier sous forme de df
     df_evenement = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT)
-    print("Réussis :)")
 
     #Pour chaque ligne du df
     for indexe, event in df_evenement.iterrows():
@@ -137,6 +160,8 @@ async def purge_event(bot):
 
     #Actualise le csv
     df_evenement.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index= False)
+    logger.log(SUCCESS, "Canal nettoyé !")
+    print("")
 
     return True
 
@@ -147,14 +172,14 @@ def executer_schedule():
         time.sleep(5)
 
 #Fonction pour initalisé le thread schedule
-async def init_schedule_thread(bot):
+async def init_schedule_thread(bot : bot_instance.MonBot):
     #Définitions de schedule pour qu'il démarre a tel heure et execute tel fonction.
     schedule.every().day.at(HEURE_PURGE).do(lambda: asyncio.run(purge_event(bot)))
     #Création et lancement du thread pour ne pas bloquer le reste du programme.
     #Le code va s'éxécuter en """""""parallele""""""" du reste du code
     schedule_thread = threading.Thread(target=executer_schedule)
     schedule_thread.start()
-    log(f"Thread mis en place pour la purge_event à {HEURE_PURGE}")
+    logger.debug(f"Thread mis en place pour la purge_event à {HEURE_PURGE}")
 
 #Mettre à jour le csv varaible
 def actu_csv_varaible(emoji: str, nom: str, id_message: int):
@@ -172,17 +197,17 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
 
     #Test les arguments sont du bon type
     if not est_emoji_valide(emoji):
-        log(f"| Fonction actu_csv_varaible | Emoji en argument non valide ({emoji})",2)
+        logger.error(f"Emoji en argument non valide ({emoji})")
         return False
     if not type(nom) == str or not type(id_message) == int:
-        log(f"| Fonction actu_csv_varaible | Format argument non valide ({nom}, {id_message})",2)
+        logger.error(f"Format argument non valide ({nom}, {id_message})")
         return False
     
     if nom == "Régent": #A mettre dans une variable
-        log(f"| Fonction actu_csv_varaible | Non repéré comme étant celui de bot ({nom})",2)
+        logger.error(f"Non repéré comme étant celui de bot ({nom})")
         return False
     
-    log(f"| Fonction actu_csv_varaible | Recherche pour: {emoji} mis par {nom}", 0)
+    logger.debug(f"Recherche pour: {emoji} mis par {nom}")
 
     emoji_semaine = ['🇱', '🇲', 'Ⓜ️','🇯', '🇻', '🇸', '🇩']
 
@@ -220,12 +245,12 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
                     df_event.at[indexe, "present"] = liste_joueur_inscris
                     df_event.at[indexe, "nbr_present"] = liste_nbr_present
 
-                    log(f'| Fonction actu_csv_varaible | {nom} ajouté au DF à la colonne présent')
+                    logger.log(SUCCESS, f'{nom} ajouté au DF à la colonne présent')
 
                     df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index= False)
 
                 else:
-                    log(f'| Fonction actu_csv_varaible | {nom} à déjà voté !', 0)
+                    logger.info(f'| Fonction actu_csv_varaible | {nom} à déjà voté !')
 
             break #Une fois l'émoji trouvé, sort de la boucle for
         
@@ -239,18 +264,19 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
             try:
                 liste_joueur_inscris = ast.literal_eval(df_event.loc[df_event['id'] == id_message, 'present'].iloc[0])
             except:
+                print("")
                 logger.error("Erreur lors de la tentative de récuperation de la liste des joueurs présent !")
                 logger.debug(f"ID du message: {id_message}")
                 logger.debug(f"df_event:")
                 logger.debug(f"{df_event}")
                 logger.debug(f"Ligne recherché:")
                 logger.debug(f"{df_event.loc[df_event['id'] == id_message]}")
+                print("")
                 
                 return False
 
             #Test si l'argument nom n'est pas dans la liste des joueurs inscrit
             if not nom in liste_joueur_inscris:
-
                 #Recupère les données du DF pour les mettre à jour
                 indexe         =  df_event.loc[df_event['id'] == id_message, 'present'].index[0]
                 nbr_present    =  df_event.loc[df_event['id'] == id_message, 'nbr_present'].iloc[0]
@@ -262,7 +288,7 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
                 df_event.at[indexe, "present"] = liste_joueur_inscris
                 df_event.at[indexe, "nbr_present"] = int(nbr_present) + 1
                 
-                log(f'| Fonction actu_csv_varaible | {nom} ajouté au df à la colonne présent')
+                logger.log(SUCCESS, f'{nom} ajouté au df à la colonne présent')
 
                 df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index= False)
             else:
@@ -284,7 +310,7 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
                 df_event.at[indexe, "absent"] = liste_joueur_absent
                 df_event.at[indexe, "nbr_absent"] = int(nbr_absent) - 1
                 
-                log(f'| Fonction actu_csv_varaible | {nom} enlevé au df à la colonne absent')
+                logger.log(SUCCESS,f'{nom} enlevé au df à la colonne absent')
 
                 df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index = False)
 
@@ -306,11 +332,11 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
                 df_event.at[indexe, "absent"] = liste_joueur_absent
                 df_event.at[indexe, "nbr_absent"] = int(nbr_absent) + 1
                 
-                log(f'| Fonction actu_csv_varaible | {nom} ajouté au df à la colonne absent')
+                logger.log(SUCCESS,f'{nom} ajouté au df à la colonne absent')
 
                 df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index= False)
             else:
-                log(f'| Fonction actu_csv_varaible | {nom} à déjà voté !', 0)
+                logger.debug(f'{nom} à déjà voté !')
             
             liste_joueur_inscris = ast.literal_eval(df_event.loc[df_event['id'] == id_message, 'present'].iloc[0])
 
@@ -328,7 +354,7 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
                 df_event.at[indexe, "present"]    =  liste_joueur_inscris
                 df_event.at[indexe, "nbr_present"] =  int(nbr_present) - 1
                 
-                log(f'| Fonction actu_csv_varaible | {nom} enlevé au df à la colonne present')
+                logger.log(SUCCESS,f'| Fonction actu_csv_varaible | {nom} enlevé au df à la colonne present')
 
                 df_event.to_csv(CHEMIN_RACINE + "/" + CHEMIN_EVENEMENT, index = False)
 
@@ -341,7 +367,7 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
     return True
 
 #Fonction pour récupérer les réaction sur les embed lorsque le bot était éteind
-async def recuperation_reaction_off(bot):
+async def recuperation_reaction_off(bot : bot_instance.MonBot):
 
     #Recupère les id des messages présent dans le canal evenement
     df_message = await fonction.recuperation_id_message(bot, ID_CHANNEL_EVENT, 10)
@@ -352,6 +378,11 @@ async def recuperation_reaction_off(bot):
 
         #Récupère le message à partir de son ID
         message = await channel.fetch_message( ligne['id_message'] )
+        message : discord.Message
+        
+        if message.author.id != ID_BOT:
+            print("Réaction mis / enlevé sur un message d'un joueur et non d'un bot.")
+            continue
 
         #Pour chaque reaction dans le message
         for reaction in message.reactions:
@@ -364,38 +395,56 @@ async def recuperation_reaction_off(bot):
 
                     print('')
                     print(f"Emoji: {reaction.emoji}, Réactions: {reaction.count} pour message {message.id}")
+                    
+                    #Récupère le fichier csv en fromat df
+                    df_fichier_event = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
+                    
+                    if message.id in df_fichier_event['id'].values:
+                        #Ne garde que la ligne de l'evènement ou la réaction à été fait
+                        df_event = df_fichier_event[df_fichier_event['id'] == message.id]
+                        #Recupère le nom pour tester si c'est HT CM ou non
+                        print(df_event)
+                        nom_event = df_event['titre'].iloc[0]
+                        
+                        if "HT CM" in nom_event:
+                            guild_id = message.guild.id
+                            if not test_si_ht_cm(bot, guild_id, user.id):
+                                logger.info("Un joueur tente de s'inscrire à HT CM mais n'a pas le rôle!")
+                                await message.remove_reaction(reaction, user)
+                                continue
 
                     resultat = actu_csv_varaible(reaction.emoji, user.global_name, message.id)
                     
                     if not resultat:
                         logger.error("Risque d'erreur sur la récupération reaction ! ! !")
+                    else:
+                        df_message = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
+                        ligne = df_message[df_message['id'] == message.id]      
 
-                    df_message = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
-                    ligne = df_message[df_message['id'] == message.id]
-                    
-                    await message.remove_reaction(reaction, user)      
-
-                    emoji_inscription = ['✅','❌']
-                    if reaction.emoji in emoji_inscription:
-                        await message.edit(embed= embed_inscriptions(ligne['titre'].iloc[0],
-                                                              ligne['description'].iloc[0],
-                                                              ligne['date'].iloc[0],
-                                                              ast.literal_eval(ligne['present'].iloc[0]),
-                                                              ligne['nbr_present'].iloc[0],
-                                                              ast.literal_eval(ligne['absent'].iloc[0])))
-                    
-                    emoji_inscription_hebdo = ['🇱', '🇲', 'Ⓜ️','🇯', '🇻', '🇸', '🇩']
-                    if reaction.emoji in emoji_inscription_hebdo:
-                        await message.edit(embed= embed_inscription_semaine(
-                                                              ligne['date'].iloc[0],
-                                                              ligne['nbr_present'].iloc[0]))
+                        emoji_inscription = ['✅','❌']
+                        if reaction.emoji in emoji_inscription:
+                            await message.remove_reaction(reaction, user)
+                            await message.edit(embed= embed_inscriptions(ligne['titre'].iloc[0],
+                                                                ligne['description'].iloc[0],
+                                                                ligne['date'].iloc[0],
+                                                                ast.literal_eval(ligne['present'].iloc[0]),
+                                                                ligne['nbr_present'].iloc[0],
+                                                                ast.literal_eval(ligne['absent'].iloc[0])))
+                        
+                        emoji_inscription_hebdo = ['🇱', '🇲', 'Ⓜ️','🇯', '🇻', '🇸', '🇩']
+                        if reaction.emoji in emoji_inscription_hebdo:
+                            await message.remove_reaction(reaction, user)
+                            await message.edit(embed= embed_inscription_semaine(
+                                                                ligne['date'].iloc[0],
+                                                                ligne['nbr_present'].iloc[0]))
 
 
 
     return True
 
 #Detecte l'ajout d'une réaction
-async def on_raw_reaction_add(payload, bot):
+async def on_raw_reaction_add(payload, bot : bot_instance.MonBot):
+    
     #Regarde si ce n'est pas le bot qui réagis (on l'exclus)
     if payload.user_id  != ID_BOT:
 
@@ -408,11 +457,16 @@ async def on_raw_reaction_add(payload, bot):
         #Si il réussit à trouver la guild
         if guild:
             member = await guild.fetch_member(payload.user_id)
+        
+        if message.author.id != ID_BOT:
+            print("Réaction mis sur un message d'un joueur et non d'un bot.")
+            return
 
         emoji_hebdo = "🇱 🇲 Ⓜ️ 🇯 🇻 🇸 🇩"
+        
         #Check si l'emote est la coche ou la croix
         if emoji.name  == "✅" or emoji.name  == "❌" or emoji.name in emoji_hebdo:
-            print("Emoji trouvé !")
+            logger.info("Emoji reconnu, recherche si le messag est un embed inscripition ...")
             csv_embed = fonction.csv_recup('csv/varaible.csv')
             n_embed = fonction.recherche_embed(csv_embed, message.id)
         else:
@@ -420,26 +474,41 @@ async def on_raw_reaction_add(payload, bot):
 
         #Regarde si la réaction est sur le bonne embed
         if int(csv_embed[n_embed][0]) == message.id and n_embed != -1:
-
-            #Actualise le csv_varaible
-            resultat = actu_csv_varaible(emoji.name, payload.member.global_name, message.id)
-            
-            if not resultat:
-                        logger.error("Risque d'erreur sur la récupération reaction ! ! !")
-
             if emoji.name  == "✅" or emoji.name  == "❌":
-                #Récupère le csv pour l'embed inscriptions
-                df_message = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
-                ligne = df_message[df_message['id'] == message.id]
+                
+                #Récupère le fichier csv en fromat df
+                df_fichier_event = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
+                #Ne garde que la ligne de l'evènement ou la réaction à été fait
+                df_event = df_fichier_event[df_fichier_event['id'] == message.id]
+                
+                #Recupère le nom pour tester si c'est HT CM ou non
+                nom_event = df_event['titre'].iloc[0]
+                
+                if "HT CM" in nom_event:
+                    if not test_si_ht_cm(bot, payload.guild_id, payload.user_id):
+                        logger.info("Un joueur tente de s'inscrire à HT CM mais n'a pas le rôle!")
+                        await message.remove_reaction(emoji, member)
+                        return
+                        
+                #Actualise le csv_varaible
+                resultat = actu_csv_varaible(emoji.name, payload.member.global_name, message.id)
+                
+                #Récupère le fichier csv en fromat df
+                df_fichier_event = pd.read_csv( CHEMIN_RACINE + '/' + CHEMIN_EVENEMENT)
+                #Ne garde que la ligne de l'evènement ou la réaction à été fait
+                df_event = df_fichier_event[df_fichier_event['id'] == message.id]
+                
+                if not resultat:
+                    logger.error("Risque d'erreur sur la récupération reaction ! ! !")
                 
                 #Supprime la réaction et met à jour l'embed
                 await message.remove_reaction(emoji, member)     
-                await message.edit(embed= embed_inscriptions(ligne['titre'].iloc[0],
-                                                    ligne['description'].iloc[0],
-                                                    ligne['date'].iloc[0],
-                                                    ast.literal_eval(ligne['present'].iloc[0]),
-                                                    ligne['nbr_present'].iloc[0],
-                                                    ast.literal_eval(ligne['absent'].iloc[0])))
+                await message.edit(embed= embed_inscriptions(df_event['titre'].iloc[0],
+                                                    df_event['description'].iloc[0],
+                                                    df_event['date'].iloc[0],
+                                                    ast.literal_eval(df_event['present'].iloc[0]),
+                                                    df_event['nbr_present'].iloc[0],
+                                                    ast.literal_eval(df_event['absent'].iloc[0])))
 
                 log(f"{payload.member.global_name} inscrit/désinscrit dans {csv_embed[n_embed][1]}", 0)
             else:
@@ -453,7 +522,7 @@ async def on_raw_reaction_add(payload, bot):
                                                     ligne['date'].iloc[0],
                                                     ligne['nbr_present'].iloc[0]))
 
-                log(f"{payload.member.global_name} inscrit/désinscrit dans {csv_embed[n_embed][1]}", 0)
+                logger.debug(f"{payload.member.global_name} inscrit/désinscrit dans {csv_embed[n_embed][1]}")
 
 
         print(f"Réaction: {emoji.name} ajouté sur un message par {payload.member.global_name}.")
