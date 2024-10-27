@@ -2,9 +2,7 @@ import pandas as pd
 import os
 import json
 from datetime import datetime
-from fonction import log
 from config_logger import logger
-from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 import fonction
@@ -24,7 +22,7 @@ if os.path.isfile(chemin_fichier_info):
     with open(chemin_fichier_info) as config_file:
         INFO_RAID = json.load(config_file)['raid']
 else:
-    log("boss, Fichier info_raid.json introuvable", 3)
+    logger.critical("boss, Fichier info_raid.json introuvable")
 
 if os.path.isfile(chemin_fichier_config):
     #Récupération des configurations du bot
@@ -43,12 +41,12 @@ if os.path.isfile(chemin_fichier_config):
     date_du_jour = datetime.now()
     numero_semaine = int( date_du_jour.strftime('%W') )
 else:
-    log("Fichier config.json introuvable", 3)
+    logger.critical("Fichier config.json introuvable")
 
 
 class Boss:
     '''
-    Class qui définit tout les boss présent dans le jeu, leurs noms (anglais et français) et le raccourcis utilisé dans les lien dps.report.
+    Class qui définit tout les boss présent dans le jeu, leurs noms (anglais et français) et le raccourcis utilisé dans les liens dps.report.
     Stocke tout les Data Frame du boss
 
     Fonction recherche_combat_existe_dans_Boss: Test si l'ID est dans le df_global -> Renvoit True ou False
@@ -59,20 +57,24 @@ class Boss:
     instances = {}
     nbr_boss = 0
     
-    def __init__(self, nom_francais: str, nom_anglais: str, raccourcis_nom: str):
+    def __init__(self, nom_francais: str, nom_anglais: str, raccourcis_nom: str, aile: str):
 
+        #Stockage des variables renseigné dans init
         nom_francais = nom_francais.replace('Ã©','é')
         
         self.nom_francais = nom_francais
         self.nom_anglais = nom_anglais
         self.raccourcis_nom = raccourcis_nom
+        self.aile = aile
 
+        #Ouverture du fichier boss_done_hebdo
         df_boss_hebdo = pd.read_csv(CHEMIN_RACINE + "/" + CHEMIN_BOSS_HEBDO, index_col = 'num_sem')
 
+        #Recherche et ajout de la variable mort_hebdo
         try:
             self.mort_hebdo =  df_boss_hebdo.loc[numero_semaine][raccourcis_nom]
         except KeyError:
-            log(f"| Class Boss | mort_hebdo non pris en charge pour {raccourcis_nom}", 2)
+            logger.error(f"mort_hebdo non pris en charge pour {raccourcis_nom}")
             self.mort_hebdo = None
 
 
@@ -91,10 +93,10 @@ class Boss:
 
             #Si on a pas 11 df
             if not len(dico_df) == 11:
-                log(f"Fichier dans {raccourcis_nom} manquant, risque d'erreur probable.", 2)
+                logger.error(f"Fichier dans {raccourcis_nom} manquant, risque d'erreur probable.")
 
         else:
-            log(f"Le dossier {self.chemin_dossier} n'éxiste pas !", 2)
+            logger.error(f"Le dossier {self.chemin_dossier} n'éxiste pas !")
             dico_df = -1
 
         
@@ -103,38 +105,41 @@ class Boss:
             if 'Stats_global' in dico_df:
                 self.df_global = dico_df['Stats_global']
             else:
-                log(f'{raccourcis_nom}: Stats_global non trouvé, erreur ! ', 2)
+                logger.error(f'{raccourcis_nom}: Stats_global non trouvé, erreur ! ')
             
             if 'Stats_DPS' in dico_df:
                 self.df_dps = dico_df['Stats_DPS']
             else:
-                log(f'{raccourcis_nom}: Stats_DPS non trouvé, erreur ! ', 2)
+                logger.error(f'{raccourcis_nom}: Stats_DPS non trouvé, erreur ! ')
 
             if 'Boons_gen_group' in dico_df:
                 self.df_gen_group = dico_df['Boons_gen_group']
             else:
-                log(f'{raccourcis_nom}: Boons_gen_group non trouvé, erreur ! ', 2)
+                logger.error(f'{raccourcis_nom}: Boons_gen_group non trouvé, erreur ! ')
 
             if 'Boons_uptime' in dico_df:
                 self.df_boon_uptime = dico_df['Boons_uptime']
             else:
-                log(f'{raccourcis_nom}: df_boon_uptime non trouvé, erreur ! ', 2)
+                logger.error(f'{raccourcis_nom}: df_boon_uptime non trouvé, erreur ! ')
 
             if 'mecanique' in dico_df:
                 self.df_mecanique = dico_df['mecanique']
             else:
-                log(f'{raccourcis_nom}: mecanique non trouvé, erreur ! ', 2)
+                logger.error(f'{raccourcis_nom}: mecanique non trouvé, erreur ! ')
         else:
-            log(f"L'instance de {raccourcis_nom} n'a pas pu charger les df",2)
+            logger.error(f"L'instance de {raccourcis_nom} n'a pas pu charger les df")
 
         Boss.instances[self.raccourcis_nom] = self
         Boss.nbr_boss += 1
     
     #Fonction pour savoir si un combat existe dans l'instance du boss ou non, return True or False
-    def recherche_combat_existe_dans_Boss(self, date_essais : str):
+    def recherche_combat_existe_dans_Boss(self, date_essais : str) -> bool:
+        """
+        Recherche si un log existe dans la Base de donnée, si oui renvoit True, si non renvoit False
+        """
         #Test si la variable existe
         if not hasattr(self, 'df_global'):
-            log(f'Fonction recherche_combat_dans_Boss : Erreur, le df n\'est pas chargé ! ! !',2)
+            logger.error(f'Fonction recherche_combat_dans_Boss : Erreur, le df n\'est pas chargé ! ! !')
             return -1
 
         #Test si date est dans le df_global
@@ -143,9 +148,11 @@ class Boss:
         else:
             return False
         
-    def boss_mort_ou_vivant(self, date_essais : str):
+    def boss_mort_ou_vivant(self, date_essais : str) -> bool:
         """
-        Prend en entrée la date du boss, sous forme "20240514-221721"
+        Recherche si le boss correspondant a la date a été tué ou non.
+        
+        Prend en entrée la date du boss, sous forme "20240514-221721" \n
         Fonction qui a pour but de rechercher dans le df_global du boss si le boss est combat est réussis ou non.
         Renvoit -1 si le boss n'existe pas dans le df
         Renvoit True / False si le boss est mort ou non.
@@ -164,10 +171,11 @@ class Boss:
                 return False
              
         elif self.recherche_combat_existe_dans_Boss(date_essais) == False: #Si le boss n'existe pas
+            logger.error(f"Le boss à la date {date_essais} n'existe pas!")
             return -1
         
         else: #Erreur
-            log("Fonction : boss_mort_ou_vivant() non executé ! ! !", 2)
+            logger.error("Erreur!")
             return -1
 
     def boss_en_cm(self, date_essais : str):
@@ -187,10 +195,11 @@ class Boss:
                 return False
         
         elif self.recherche_combat_existe_dans_Boss(date_essais) == False: #Si le boss n'existe pas
+            logger.error(f"Le boss à la date {date_essais} n'existe pas!")
             return -1
         
         else: #Erreur
-            log("Fonction : boss_en_cm() non executé ! ! !", 2)
+            logger.error("Erreur dans le recherche de cm")
             return -1
 
     def nom_boss_existe(raccourcis):
@@ -226,12 +235,12 @@ def ajout_boss(raccourcis_nom, df_global, df_dps, df_gen_group, df_uptime, df_me
             df_fichier = pd.read_csv(CHEMIN_RACINE + chemin + l_chemin[compteur], index_col=None)
             
         else:
-            log(f"Le fichier {l_chemin[compteur]} n'existe pas ! !",2)
+            logger.error(f"Le fichier {l_chemin[compteur]} n'existe pas ! !")
             return -1
             
         id_boss = df['ID'].iloc[0]
         if str(id_boss) in df_fichier['ID'].values:
-            log(f'Fonction ajout_boss: Combat ID: {id_boss} pour le fichier {l_chemin[compteur]} existe déjà',0)
+            logger.debug(f'Combat ID: {id_boss} pour le fichier {l_chemin[compteur]} existe déjà')
             compteur += 1
             continue
             
@@ -253,12 +262,12 @@ def scrap(lien: str):
     requete = requests.get(lien)
     page = requete.content
     soup = BeautifulSoup(page, features="html.parser")
-    log("Log de raid mis en soup")
+    logger.info("Log de raid mis en soup")
 
     print(type(soup.text))
 
     if "error" in soup.text:
-        log(f"| Fonction ajout_boss() | Le lien n'existe pas ! ! ! {lien}", 2)
+        logger.error(f"| Fonction ajout_boss() | Le lien n'existe pas ! ! ! {lien}")
         return -1
     return soup
 
@@ -277,10 +286,10 @@ def traiterLogs(lien: str):
         date_essais = datetime.strptime(date_essais, '%Y%m%d-%H%M%S')
 
         #Récupèrer le soup
-        log("Scrappage du site",0)
+        logger.debug("Scrappage du site")
         soup = scrap(lien)
         if soup == -1:
-            log(f"| Fonction traiterLogs() | Le lien n'a pas pu être soup, traiterLogs avorté ! ! !", 2)
+            logger.error(f"Le lien n'a pas pu être soup, traiterLogs avorté ! ! !")
             return -1
     
         fonction.csv_actu('csv/debbug_log.csv', soup) #Ligne pour debbug, voir le scrap.
@@ -530,15 +539,29 @@ def traiterLogs(lien: str):
         df_uptime = pd.DataFrame(df_uptime)
 
         #Définition du df_mecanique
-        df_mecanique = {}
+        df_mecanique = {
+                        'ID': [],
+                        'Name': []
+                        }
+        
+        print("df_mecanique")
+        print("nbr joueurs: ",len(data["players"]))
+        
         for i in range(len(data["players"])):
-            df_mecanique['ID'] = id_boss
-            df_mecanique["Name"] = data["players"][i]["name"]
-            for mecs in mecanique_desc:
-                df_mecanique[mecs] = data["phases"][0]["mechanicStats"][i][0]
+            df_mecanique['ID'].append(id_boss)
+            df_mecanique["Name"].append(data["players"][i]["name"])
+            
+            print(data["players"][i]["name"])
+            
+            for num_mec, mecs in enumerate(mecanique_desc):
+                if mecs not in df_mecanique:
+                    df_mecanique[mecs] = []
+                df_mecanique[mecs].append(int(data["phases"][0]["mechanicStats"][i][num_mec][0]))
+                print(data["phases"][0]["mechanicStats"][i][num_mec][0])
 
         df_mecanique = pd.DataFrame(df_mecanique)
-        df_mecanique.fillna(0, inplace=True)   
+        df_mecanique.fillna("0", inplace=True)   
+        
         
         #Fonction pour ajouter le boss dans les fichiers log_boss_df
         ajout_boss(raccourcis_nom, df_global, df_dps, df_gen_group, df_uptime, df_mecanique)
@@ -548,8 +571,10 @@ def traiterLogs(lien: str):
 #Ajoute un lien au df du boss en question.
 def ajout_lien_au_df(lien : str):
     """
-    Fonction qui prend en entrée le lien du boss a traiter. Si le boss n'est pas déjà dans le df de son instance, le crée et le met à jour, sinon ne fait rien.
-    renvoit rien du tout
+    Traite le lien est l'ajouté à la base de donnée du boss.
+    
+    ### Paramètre:
+     - Lien (str): Lien dps.report du boss
     """
 
     #Extrait la date du lien
@@ -562,33 +587,33 @@ def ajout_lien_au_df(lien : str):
         instance = Boss.instances[raccourcis_boss]
         instance: Type[Boss]
     else:
-        log(f"| Fonction ajout_lien_au_df() | Instance du boss : {raccourcis_boss} non trouvé ! ! !", 2)
+        logger.error(f"Instance du boss : {raccourcis_boss} non trouvé ! ! !")
         return -1
     
     nom_fr = instance.nom_francais
     nom_en = instance.nom_anglais
 
-    log(f"| Fonction ajout_lien_au_df() | Vérification si le boss : {raccourcis_boss} de la date : {date_essais} existe . . .")
+    logger.debug(f"Vérification si le boss : {raccourcis_boss} de la date : {date_essais} existe . . .")
     combat_present = instance.recherche_combat_existe_dans_Boss(date_essais)
 
     if combat_present == False:
-        log("| Fonction ajout_lien_au_df() | Boss non trouvé, début de traiterlogs()")
+        logger.info("Boss non trouvé, début de traiterlogs()")
         traiterLogs( lien )
         Boss(nom_fr, nom_en, raccourcis_boss) #Recrée l'instance du boss
     elif combat_present == True:
-        log(f"| Fonction ajout_lien_au_df() | Boss trouvé dans l'instance : {raccourcis_boss}")
+        logger.info(f"Boss trouvé dans l'instance : {raccourcis_boss}")
     else:
-        log("| Fonction ajout_lien_au_df() | Erreur, fonction ajout_lien_au_df() non executé ! ! !", 2)
+        logger.error("Erreur, fonction ajout_lien_au_df() non executé ! ! !")
 
 #Definition des boss présent dans le jeu
 def init_instances_boss():
     for aile in INFO_RAID.values():
         for boss in aile.values():
-            Boss(boss['nom_francais'], boss['nom_anglais'], boss['raccourcis'])
+            Boss(boss['nom_francais'], boss['nom_anglais'], boss['raccourcis'], boss['aile'])
     
 
-    Boss('Mai trin','Mai trin','trin')
-    Boss('Ankka','Ankka','ankka')
+    Boss('Mai trin','Mai trin','trin','strike')
+    Boss('Ankka','Ankka','ankka','strike')
 
     logger.info(f"Nombre d'instance de Boss crée: {Boss.nbr_boss}")
 
