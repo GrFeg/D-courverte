@@ -39,6 +39,7 @@ def calcul_pourcentage(votes: list[int]) -> tuple:
     Fonction utilisé pour la gestion des votes de la commande /vote
     Récupère le nombre de vote pour chaque réponse et retourne le pourcentage de personnes ayant voté pour chaque réponse
     """
+    votes = list(map(int, votes))
     total = sum(votes)
     if total == 0:
         return 0, 0
@@ -51,8 +52,7 @@ def embed_vote(ligne_csv: list):
 
     #Calculer les % des votes
     pourcentage = [0,0]
-    pourcentage = calcul_pourcentage(ligne_csv)
-    espace = "ㅤㅤㅤㅤㅤ" #Ligne conserver pour avoir le caractère " " ^^
+    pourcentage = calcul_pourcentage(ligne_csv[4:6])
     field1 = f"({pourcentage[0]}%)"
     field2 = f"({pourcentage[1]}%)"
 
