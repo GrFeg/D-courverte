@@ -5,7 +5,7 @@ log_dps
 csv/
 mon_graphique.png
 __pycache__/
-__pycache__/statistiqueraid.cpython-312.pyc
+*.py[cod]
 info.json
 bot.log
 _donnee/
