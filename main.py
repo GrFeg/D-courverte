@@ -1,15 +1,11 @@
-import discord
 import os
 import json
 import threading
-import inscription.inscription as inscription
-from discord.ext import commands
 from affichage_info import init_semaine_df
 from config_logger import logger
 from boss import init_instances_boss
 from joueur import init_instances_joueur
 from commande.recap_raid.init_log import init_log
-from discord.ui import Button, View
 import bot_instance
 from api import run_api
 
