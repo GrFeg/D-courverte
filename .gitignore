@@ -9,3 +9,5 @@ __pycache__/statistiqueraid.cpython-312.pyc
 info.json
 bot.log
 _donnee/
+info_skill_id.json
+debug_rota.json
