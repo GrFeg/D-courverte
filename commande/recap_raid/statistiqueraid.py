@@ -1,11 +1,8 @@
-import csv
 import discord
 import fonction
 from fonction import log
 import os
 from datetime import datetime
-import requests
-from bs4 import BeautifulSoup
 import json
 from discord.ui import Button, View
 import matplotlib.pyplot as plt
@@ -14,7 +11,6 @@ import pandas as pd
 import numpy as np
 import os
 from PIL import Image
-from pathlib import Path
 from boss import Boss, traiterLogs, traitement_message_log
 from commande.recap_raid.embed import embed_erreur
 from joueur import Joueur
@@ -202,10 +198,10 @@ date_modification = datetime.fromtimestamp(timestamp).strftime('%Y%m%d')
 
 
 #Fonction pour afficher les mécaniques
-def affichage_mecs(raccourcis_nom: str, log_boss: dict):
+def affichage_mec(raccourcis_nom: str, log_boss: dict):
     '''
     Fontion qui définit l'affichage des méccaniques en fonction du boss
-    Traite log_boss qui est la version brut avec toutes les information du boss en question pour n'en garder que les méccaniques utiles.
+    Traite log_boss qui est la version brut avec toutes les informations du boss en question pour n'en garder que les méccaniques utiles.
     Traduis les mécaniques en Français.
     En déduit les rôles spécifiques au boss jouait pas les joueurs seulement pour la partie méccaniques.
     '''
@@ -422,6 +418,40 @@ def affichage_mecs(raccourcis_nom: str, log_boss: dict):
                             
         return stats
 
+def affichage_mecs(racourcis_nom, df_mecanique: pd.DataFrame):
+    
+    df_mecanique = df_mecanique.fillna(0)
+    
+    with open("_donnee/nom_mecanique.json") as fichier_meca_trad:
+        traduction = json.load(fichier_meca_trad)
+    
+    print(traduction)
+    
+    dico_mec = {}
+    #Iter chaque ligne
+    for index, row in df_mecanique.iterrows():
+        joueur = row['Name']
+        
+        #Si le nom du personnage n'est pas encore dans le dico crée une liste vide
+        if joueur not in dico_mec:
+            dico_mec[joueur] = []
+        
+        #Chaque nom de colonne
+        for col in df_mecanique.columns:
+            
+            if not df_mecanique[col].sum() == 0:
+                
+                #On retire Name et ID car pas des mecs
+                if col not in ['Name', 'ID']:
+                    if not col in traduction["expulsion"] and int(row[col]) > 0:
+                        if col in traduction["traduction"]:
+                            dico_mec[joueur].append((traduction["traduction"][col], str(int(row[col]))))
+                        else:
+                            dico_mec[joueur].append((col, str(int(row[col]))))
+    
+    print(dico_mec)
+    return dico_mec
+
 #Fonction pour afficher les statistiques global d'un combat
 def affichage_stats_glo(df_global):
     #Définir les stats globals
@@ -438,18 +468,19 @@ def affichage_stats_glo(df_global):
 
 #Fonction pour afficher les statistiques global d'un joueur
 def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourcis_nom: str):
-
+    """
+    Renvoit les statistique globales (role, personnage, dps ..) d'un joueur
+    """
     #Récupération de l'instance Boss pour le boss en question (raccourcis_nom)
     instance_boss = Boss.instances[raccourcis_nom]
-    instance_boss: Type[Boss]
+    instance_boss: Boss
 
     #Récupération des différents df utilisé dans cette fonction
     df_dps_glo = instance_boss.df_dps[instance_boss.df_dps['ID'] == date_essais]
     df_dps_glo : pd.DataFrame
 
     #Copie de df_dps_glo pour modifier le df sans impacter la boucle for plus bas
-    df_dps = df_dps_glo.copy()
-    df_dps = df_dps[df_dps['Account'] == joueur.nom_de_compte]
+    df_dps = df_dps_glo[df_dps_glo['Account'] == joueur.nom_de_compte].copy()
     df_dps : pd.DataFrame
 
     nom_personnage = df_dps['Name'].iloc[0]
@@ -465,7 +496,8 @@ def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourc
     #Définition des variables
     nom_de_compte = joueur.nom_de_compte
 
-    degat = str(round(df_dps['Boss DPS'].iloc[0] / 1000,2)) + "K"
+    degat_brut = round(df_dps['Boss DPS'].iloc[0] / 1000,2)
+    degat = str(degat_brut) + "K"
     sub = df_dps['Sub Group'].iloc[0]
     gen_alac = df_gen_group['Alacrity'].iloc[0]
     gen_quick = df_gen_group['Quickness'].iloc[0]
@@ -483,7 +515,8 @@ def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourc
             boon = 'Quickness'
 
     #Définition de persos
-    stats = f"ㅤ**- Perso: **{df_dps['Profession'].iloc[0]}ㅤㅤ \n"
+    stats = f"ㅤ**- Perso: **{df_dps['Profession'].iloc[0]} ㅤㅤ \n"
+    role = "dps"
 
     #Regarde si les boons existe bien
     if boon != "none":
@@ -514,7 +547,8 @@ def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourc
 
         #Fait la moyenne
         uptime_boon = uptime_boon_cumulee / compteur
-
+        
+        
         #Regarde si le boon est quickness ou alac pour afficher le bon nom du bonus
         if boon == 'Quickness':
             boon_stats += (f" Quick \n"
@@ -525,13 +559,14 @@ def affichage_stats_glo_joueur(joueur: Type[Joueur], date_essais : str, raccourc
              
     
     #Test is soigneur et ne met pas la ligne du DPS si oui, sinon la rajoute
-    if 'Healing:' in df_dps['Role'][df_dps['Account'] == nom_de_compte].iloc[0]:      
+    if 'Healing:' in df_dps['Role'][df_dps['Account'] == nom_de_compte].iloc[0]:
+        role = 'heal'      
         stats += (f"ㅤ**- Rôle:** Heal {boon_stats} \n")        
     else:
         stats += (f"ㅤ**- Rôle:** DPS {boon_stats} \n"
                   f"ㅤ**- DPS:** {degat} \n")
 
-    return stats
+    return stats, degat_brut, role
 
 
 def dps_moyen(joueur: Type[Joueur], boss: Type[Boss]):
@@ -777,6 +812,7 @@ def embed_soiree(bouton: int, mecs: bool):
     #Récupération des liens stocké dans histo_log.csv et définiton du pointeur.
     df_logs = pd.read_csv(CHEMIN_RACINE + CHEMIN_HISTO_LOGS)
 
+    #Filtre le DF avec seulement les logs de la date la plus récente
     dernier_jour = df_logs['date'].max()
     liens_soiree = df_logs['logs'][df_logs['date'] == dernier_jour].to_list()
 
@@ -813,7 +849,7 @@ def embed_soiree(bouton: int, mecs: bool):
         log(f"| Fonction embed_soiree() | Instance du boss : {raccourcis_nom} non trouvé ! ! !", 2)
         return embed_erreur()
 
-    date_essais = lien[lien.index('-') +1 : lien.index('_')]
+    date_essais = lien[lien.index('-') + 1 : lien.index('_')]
 
     #Test si le log du boss est déjà dans l'instance du boss, sinon le crée
     if  not instance_boss.recherche_combat_existe_dans_Boss(date_essais):
@@ -826,6 +862,14 @@ def embed_soiree(bouton: int, mecs: bool):
 
     df_global = instance_boss.df_global[instance_boss.df_global['ID'] == date_essais]
     df_dps = instance_boss.df_dps[instance_boss.df_dps['ID'] == date_essais]
+    df_mecanique = instance_boss.df_mecanique[instance_boss.df_mecanique['ID'] == date_essais]
+    
+    df_dps : pd.DataFrame
+    df_global : pd.DataFrame
+    df_mecanique : pd.DataFrame
+    
+    print(date_essais)
+    print(df_mecanique)
 
     stats_global, couleur = affichage_stats_glo(df_global)
 
@@ -842,22 +886,49 @@ def embed_soiree(bouton: int, mecs: bool):
         embed.add_field(name="\u200b", value='', inline=False)
         compteur = 0 
 
+        stats = {}
+        dps = {}
+        
+        for id_joueur, instance_joueur in Joueur.instances.items():
+            if instance_joueur.nom_de_compte in df_dps['Account'].values:
+
+                resultat = affichage_stats_glo_joueur(instance_joueur, date_essais, raccourcis_nom)
+                stats[id_joueur] = resultat[0]
+                dps[id_joueur] = resultat[1]
+        
+        stats = dict(sorted(stats.items(), key=lambda item: dps[item[0]], reverse=True))
+        
+        
         #Parcours tout les jouers de la guilde
-        for joueur in list(Joueur.instances.values()):
-            if joueur.nom_de_compte in df_dps['Account'].values:
+        for id_joueur in stats:
+            
+                instance_joueur = Joueur.instances[id_joueur]
                 #récupération des variables.
-                nom = joueur.nom_de_compte
-                pseudo = joueur.pseudo
+                nom = instance_joueur.nom_de_compte
+                pseudo = instance_joueur.pseudo
                 compteur += 1
                 mort = ""
 
                 if df_dps['Time Died'][df_dps['Account'] == nom].iloc[0] == 1:
                     mort = "(mort)"
 
-                stats = affichage_stats_glo_joueur(joueur, date_essais, raccourcis_nom)
-
                 #Le texte de l'embed une fois stats remplis    
-                embed.add_field(name = (f"# {pseudo}: {mort}"), value = stats , inline = True)
+                if compteur == 1:
+                    embed.add_field(name = (f":first_place: {pseudo}: {mort}"), value = stats[id_joueur] , inline = True)
+                elif compteur == 2:
+                    embed.add_field(name = (f":second_place: {pseudo}: {mort}"), value = stats[id_joueur] , inline = True)
+                elif compteur == 3:
+                    embed.add_field(name = (f":third_place: {pseudo}: {mort}"), value = stats[id_joueur] , inline = True)
+                elif 'dps[id_joueur]Quick' in stats[id_joueur] and not 'Heal' in stats[id_joueur]:
+                    embed.add_field(name = (f"<:Celerite:952196453449744484> {pseudo}: {mort}"), value = stats[id_joueur] , inline = True)
+                elif 'Alac' in stats[id_joueur] and not 'Heal' in stats[id_joueur]:
+                    embed.add_field(name = (f"<:Alacrite:952196440808099840> {pseudo}: {mort}"), value = stats[id_joueur] , inline = True)
+                elif 'Heal' in stats[id_joueur]:
+                    embed.add_field(name = (f"<:Soigneur:952196524077617162> {pseudo}: {mort}"), value = stats[id_joueur] , inline = True)
+                elif dps[id_joueur] < 1:
+                    embed.add_field(name = (f"<:idk:943719483455979520> {pseudo}: {mort}"), value = stats[id_joueur] , inline = True)
+                else:
+                    embed.add_field(name = (f"# {pseudo}: {mort}"), value = stats[id_joueur] , inline = True)
 
                 
                 if compteur == 2 or compteur ==  4 or compteur == 6 or compteur == 8:
@@ -879,18 +950,34 @@ def embed_soiree(bouton: int, mecs: bool):
         compteur = 0 
 
         #Définir la variable stats, qui va afficher seulement les mécaniques importante, trtaduite en français.
-        stats = 1 #affichage_mecs(raccourcis_nom, log_boss)
+        dico_mec = affichage_mecs(raccourcis_nom, df_mecanique)
 
         for joueur in list(Joueur.instances.values()):
-            try: 
-                pseudo = joueur.pseudo
+            joueur : Joueur
+            
+            if joueur.nom_de_compte in df_dps['Account'].values:
                 
-                embed.add_field(name = (f"# {pseudo}:"), value = stats[compteur] , inline = True)
-                compteur += 1
-                if compteur == 2 or compteur ==  4 or compteur == 6 or compteur == 8:
-                    embed.add_field(name="\u200b", value='', inline=False)
-            except:
-                1
+                nom_perso = df_dps['Name'][df_dps['Account'] == joueur.nom_de_compte].iloc[0]
+                
+                #récupération des variables.
+                nom = joueur.nom_de_compte
+                pseudo = joueur.pseudo
+
+                try: 
+                    meca = ""
+                    for mecs in dico_mec[nom_perso]:
+                        meca += f"ㅤ- **{mecs[0]}:** {mecs[1]} \n"
+                    
+                    if dico_mec[nom_perso] == []:
+                        meca = "C'est un sans faute !!"
+                        
+                    embed.add_field(name = (f"# {pseudo}:ㅤㅤㅤㅤㅤㅤㅤㅤ"), value = meca , inline = True)
+                    compteur += 1
+                    if compteur == 2 or compteur ==  4 or compteur == 6 or compteur == 8:
+                        embed.add_field(name="\u200b", value='', inline=False)
+                except:
+                    embed.add_field(name = "Upsi ...", value = "Pizza apprend à coder, faut repasser quand il sera faire quelque chose de ces 10 doigts" , inline = True)
+                    
         embed.add_field(name="\u200b", value='', inline=False)    
         embed.add_field(name ="Lien du boss:", value = lien , inline = True)
     return embed
