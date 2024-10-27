@@ -88,7 +88,7 @@ def embed_inscriptions(
         embed_inscription.add_field(name = "\u200b" , value = test , inline = False)
 
     else:
-        embed_inscription.add_field(name = f"Personne inscrite: {nombre_inscrit} / 10" , value = format_liste_joueur , inline = False)
+        embed_inscription.add_field(name = f"Personne inscrite: {int(nombre_inscrit) - nombre_reserve} / 10" , value = format_liste_joueur , inline = False)
         if int(nombre_inscrit) > 10:
             embed_inscription.add_field(name = f"Réserve: {nombre_reserve}" , value = format_reserve , inline = False)
         if len(liste_joueur_absent) != 0:
