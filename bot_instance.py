@@ -2,14 +2,11 @@ import discord
 from discord.ext import commands
 import inscription.inscription as inscription
 import json, os
-from affichage_info import actualisation_embed, init_semaine_df
+from affichage_info import actualisation_embed
 from config_logger import logger
 from discord_on_message import message_discord
 from commande.vote import ajout_reaction, suppression_reaction
 from fonction import recuperation_message
-from boss import init_instances_boss
-from joueur import init_instances_joueur
-from commande.recap_raid.init_log import init_log
 
 chemin_fichier_config = '_donnee/config.json'
 

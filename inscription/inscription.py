@@ -23,7 +23,7 @@ Gère les evenements terminés et les supprime du canal. Récupère les réactgi
 """
 
 #Fonction setup qui va définir quel type de bot.event sont utilisé dans ce fichier
-async def setup(bot : bot_instance.MonBot):
+async def setup(bot):
 
     #Detection de suppression d'une réaction sur un message
     async def reaction_remove(payload):
@@ -57,7 +57,7 @@ else:
     logger.critical("Fichier config.json introuvable")
 
 #Test si l'user sur le serveur guild a le rôle training cm
-def test_si_ht_cm(bot : bot_instance.MonBot, guild_id, user_id):
+def test_si_ht_cm(bot, guild_id, user_id):
     """
     Test si le joueur (user_id) renseigné en entré a le rôle discord 'Training cm'.
     ### Arguments :
@@ -121,7 +121,7 @@ def trouver_jour(date: str):
     return "erreur"
 
 #Fonction pour supprimer les evenement terminés
-async def purge_event(bot : bot_instance.MonBot):
+async def purge_event(bot):
     print("")
     logger.debug('Début de la fonction')
 
@@ -172,7 +172,7 @@ def executer_schedule():
         time.sleep(5)
 
 #Fonction pour initalisé le thread schedule
-async def init_schedule_thread(bot : bot_instance.MonBot):
+async def init_schedule_thread(bot):
     #Définitions de schedule pour qu'il démarre a tel heure et execute tel fonction.
     schedule.every().day.at(HEURE_PURGE).do(lambda: asyncio.run(purge_event(bot)))
     #Création et lancement du thread pour ne pas bloquer le reste du programme.
@@ -367,7 +367,7 @@ def actu_csv_varaible(emoji: str, nom: str, id_message: int):
     return True
 
 #Fonction pour récupérer les réaction sur les embed lorsque le bot était éteind
-async def recuperation_reaction_off(bot : bot_instance.MonBot):
+async def recuperation_reaction_off(bot):
 
     #Recupère les id des messages présent dans le canal evenement
     df_message = await fonction.recuperation_id_message(bot, ID_CHANNEL_EVENT, 10)
@@ -443,7 +443,7 @@ async def recuperation_reaction_off(bot : bot_instance.MonBot):
     return True
 
 #Detecte l'ajout d'une réaction
-async def on_raw_reaction_add(payload, bot : bot_instance.MonBot):
+async def on_raw_reaction_add(payload, bot):
     
     #Regarde si ce n'est pas le bot qui réagis (on l'exclus)
     if payload.user_id  != ID_BOT:

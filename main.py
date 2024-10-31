@@ -1,12 +1,12 @@
 import os
 import json
 import threading
+import bot_instance
 from affichage_info import init_semaine_df
 from config_logger import logger
 from boss import init_instances_boss
 from joueur import init_instances_joueur
 from commande.recap_raid.init_log import init_log
-import bot_instance
 from api import run_api
 
 espace = "ㅤㅤㅤㅤㅤ" #Ligne conserver pour avoir le caractère " " ^^
@@ -82,10 +82,10 @@ def init():
     
     
 if __name__ == "__main__":
+    
+    bot = bot_instance.bot
 
     init_api()
     init()
-
-    bot = bot_instance.bot
     
     bot.run(TOKEN)
