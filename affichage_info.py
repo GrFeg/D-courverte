@@ -173,7 +173,8 @@ def embed_quel_raids(dico_info_raid_done: dict):
 
 #Fonction pour acutaliser l'embed recap_hebdo
 async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
-    print("prout")
+    
+    logger.debug("Début de la Fonction")
     df_boss_hebdo = ajout_boss_hebdo_via_histo(df_histo_message)
     numero_semaine = int( date_du_jour.strftime('%W') )
 
@@ -208,7 +209,7 @@ async def actualisation_embed(bot, df_histo_message: pd.DataFrame):
         message = await channel.fetch_message( 1252744415370285056 ) #Message embed déjà envoyé A automatiser ! ! ! ! !
         message_trouve = True
     except:
-        logger.error("Fonction actualisation_embed : EMBED ou CHANNEL non trouvé ! ! !")
+        logger.error("EMBED ou CHANNEL non trouvé ! ! !")
         message_trouve = False
 
     if not message_trouve:
