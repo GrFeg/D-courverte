@@ -145,9 +145,8 @@ def embed_quel_raids(dico_info_raid_done: dict):
 
 
     #Pour chaque Aile de raid (7)
-    compteur = 0
-    for i in range(7):
-        compteur += 1
+    for compteur in range(1,7+1):
+
         affichage = ""
 
         for e in range(len(DICO_NOM_BOSS_RAID['W' + str(compteur)])):
@@ -165,6 +164,8 @@ def embed_quel_raids(dico_info_raid_done: dict):
 
         if compteur == 2 or compteur ==  4 or compteur == 6 or compteur == 8:
                         embed_info_raid.add_field(name="\u200b", value='', inline=False)
+        
+        embed_info_raid.set_footer(text=f"Semaine numéro {numero_semaine} ")
 
 
 
