@@ -599,7 +599,7 @@ def ajout_lien_au_df(lien : str):
     if combat_present == False:
         logger.info("Boss non trouvé, début de traiterlogs()")
         traiterLogs( lien )
-        Boss(nom_fr, nom_en, raccourcis_boss) #Recrée l'instance du boss
+        Boss(nom_fr, nom_en, raccourcis_boss, Boss.instances[raccourcis_boss].aile) #Recrée l'instance du boss
     elif combat_present == True:
         logger.info(f"Boss trouvé dans l'instance : {raccourcis_boss}")
     else:
