@@ -7,6 +7,7 @@ import fonction
 import affichage_info
 import seaborn as sns
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 """
 Fichier python qui gère l'evènement on_message de discord. Cet évènement detecte chaque envoit de message sur le serveur discord.
@@ -61,9 +62,16 @@ async def traitement_message_envoye_log(bot, message: discord.Message):
                 erreur = ajout_lien_au_df(lien_log)
 
                 #Si tout c'est bien passé, le rajoute a histo_log
-                if not erreur == -1:
-                    df_histo_message = await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
-                    await affichage_info.actualisation_embed(bot, df_histo_message)
+                date_du_jour = datetime.now()
+                date_log = lien_log.split("-")[1]
+                date_log_format = datetime.strptime(date_log, "%Y%m%d")
+                
+                if (date_du_jour - date_log_format).days > 7:
+                    logger.info(f"Log trop ancien ({(date_du_jour - date_log_format).days} jours), boss hebdo non mis à jour")
+                else:
+                    if not erreur == -1:
+                        df_histo_message = await fonction.recuperation_message(bot, CHANNEL_ID_LOGS, 15, True, CHEMIN_HISTO_LOGS)
+                        await affichage_info.actualisation_embed(bot, df_histo_message)
     else:
         await message.delete()
 
