@@ -116,11 +116,13 @@ def joli_graphique(df : pd.DataFrame):
     return file    
 
 #Fonction pour récuperer et traiter les donnée des rôles pour un boss et un joueur en particulier
-def quel_role_sur_quel_boss(boss, nom_de_compte):
+def quel_role_sur_quel_boss(boss: str, nom_de_compte: str):
     '''
     Fonction pour savoir quels proportion des rôles le joueur a t-il fait sur un boss en question.
     Affiche le graphique grace a la fonction joli_graphique
     '''
+    boss = boss.lower()
+    
     instance_boss = Boss.instances[boss]
     instance_boss: Type[Boss]
 
@@ -153,17 +155,29 @@ def quel_role_sur_quel_boss(boss, nom_de_compte):
         #DPS
         if "Condi" in role or "-1" in role:
             #ALAC
-            if ligne['Alacrity'] != '0':
-                gen_alac = float(ligne['Alacrity'][:-1])
-                if gen_alac > 20:
-                    df.loc[indexe, ['Role_f']] = ["Alac"]
-                    continue
+            #Test si c'est un String
+            if isinstance(ligne['Alacrity'], str):
+                try:
+                    gen_alac = float(ligne['Alacrity'][:-1])
+                except:
+                    gen_alac = 0.0
+            else:
+                gen_alac = ligne['Alacrity']
+            if gen_alac > 20:
+                df.loc[indexe, ['Role_f']] = ["Alac"]
+                continue
+            
             #QUICK
-            if ligne['Quickness'] != '0':
-                gen_quick = float(ligne['Quickness'][:-1])
-                if gen_quick > 20:
-                    df.loc[indexe, ['Role_f']] = ["Quick"]
-                    continue
+            if isinstance(ligne['Quickness'], str):
+                try:
+                    gen_quick = float(ligne['Quickness'][:-1])
+                except:
+                    gen_quick = 0.0
+            else:
+                gen_quick = ligne['Quickness']
+            if gen_quick > 20:
+                df.loc[indexe, ['Role_f']] = ["Quick"]
+                continue
             #Condi
             if "Condi" in role:
                 df.loc[indexe, ['Role_f']] = ["Condi"]
