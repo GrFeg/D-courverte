@@ -58,8 +58,10 @@ async def traitement_message_envoye_log(bot, message: discord.Message):
             
             #Pour chaque lien dans la liste
             for lien_log in liste_logs:
+                logger.debug(f"Début du traitement de {lien_log}")
                 #Ajoute le lien au df global du boss (traite etc ..)
                 erreur = ajout_lien_au_df(lien_log)
+                
 
                 #Si tout c'est bien passé, le rajoute a histo_log
                 date_du_jour = datetime.now()
