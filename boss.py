@@ -19,7 +19,7 @@ chemin_fichier_config = '_donnee/config.json'
 
 if os.path.isfile(chemin_fichier_info):
     #Récupération des configurations du bot
-    with open(chemin_fichier_info) as config_file:
+    with open(chemin_fichier_info, encoding= 'utf-8') as config_file:
         INFO_RAID = json.load(config_file)['raid']
 else:
     logger.critical("boss, Fichier info_raid.json introuvable")
@@ -218,7 +218,7 @@ def traitement_message_log(message : str) -> list[str]:
 
     return liste_log
 
-#Fonction qui prend le df d'un boss pour actualisé les fichiers des boss
+#Fonction qui prend les df d'un boss pour actualisé les fichiers des boss
 def ajout_boss(raccourcis_nom, df_global, df_dps, df_gen_group, df_uptime, df_mecanique):
 
     chemin = '/log_boss_df/' + raccourcis_nom
@@ -248,7 +248,7 @@ def ajout_boss(raccourcis_nom, df_global, df_dps, df_gen_group, df_uptime, df_me
         df_fichier = pd.concat([df_fichier, df], ignore_index=True)
         print(df_fichier)
 
-        df_fichier.to_csv(CHEMIN_RACINE + chemin + l_chemin[compteur], index= False)
+        df_fichier.to_csv(CHEMIN_RACINE + chemin + l_chemin[compteur], index= False, encoding= "utf-8")
         print(l_chemin[compteur] + " : OK " + str(compteur))
         setattr(Boss.instances[raccourcis_nom], nom_df[compteur], df_fichier)
         compteur += 1
@@ -329,6 +329,9 @@ def traiterLogs(lien: str):
         #Partie pour le parse
         id_boss = lien[lien.index('-') +1 : lien.index('_')]
         boss = Boss.instances[raccourcis_nom].nom_francais
+        
+        logger.debug(f"Création du DF GLOBAL pour {boss}")
+        
         if log_boss["cm"]:
             boss += " CM"
         print(data['targets'][0]['hpLeft'])
@@ -583,6 +586,7 @@ def ajout_lien_au_df(lien : str):
     #Extrait le raccourcis_boss du lien
     raccourcis_boss = lien.split('_')[1]
 
+    #Test si le raccourcis_boss est bien une instance de l'objet Boss()
     if raccourcis_boss in Boss.instances:
         instance = Boss.instances[raccourcis_boss]
         instance: Type[Boss]
@@ -593,6 +597,7 @@ def ajout_lien_au_df(lien : str):
     nom_fr = instance.nom_francais
     nom_en = instance.nom_anglais
 
+    #Test si le boss n'est pas déjà présent dans l'instance
     logger.debug(f"Vérification si le boss : {raccourcis_boss} de la date : {date_essais} existe . . .")
     combat_present = instance.recherche_combat_existe_dans_Boss(date_essais)
 
