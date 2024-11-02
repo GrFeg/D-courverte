@@ -118,4 +118,4 @@ def test_logger():
     print("")
 
 
-test_logger()
+#test_logger()
