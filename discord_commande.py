@@ -9,6 +9,7 @@ import random
 from discord.ui import Button, View
 import os
 import json
+from boss import init_instances_boss, Boss
 
 
 '''
@@ -32,6 +33,7 @@ if os.path.isfile(chemin_fichier_config):
     shonen = shonen["phrase"]
     
     ID_GUILD_SERVEUR_INAE = config['ID_GUILD_SERVEUR_INAE']
+    ID_PIZZABLEU = config['ID_JOUEUR_PIZZABLEU']
 
 else:
     log("Fichier config.json introuvable", 3)
@@ -236,6 +238,20 @@ class SlashCommands(commands.Cog):
     @discord.app_commands.guilds(discord.Object(id= ID_GUILD_SERVEUR_INAE))
     async def espoir(self, interaction: discord.Interaction):
         await interaction.response.send_message(random.choice(shonen))
+    
+    #Commande reload
+    @app_commands.command(name="reload", description="prout")
+    @discord.app_commands.guilds(discord.Object(id= ID_GUILD_SERVEUR_INAE))
+    async def reload(self, interaction: discord.Interaction):
+        user_id = interaction.user.id
+        
+        if user_id == ID_PIZZABLEU:
+                
+            print(Boss.instances) 
+            init_instances_boss()
+            await interaction.response.send_message("Boss rechargé !")
+        else:
+            await interaction.response.send_message("C'est pas pour toi, t'es trop petit!")
     
 
 
