@@ -129,9 +129,12 @@ class Boss:
         else:
             logger.error(f"L'instance de {raccourcis_nom} n'a pas pu charger les df")
 
-        Boss.instances[self.raccourcis_nom] = self
-        Boss.nbr_boss += 1
-    
+        self.__class__.instances[self.raccourcis_nom] = self
+        Boss.nbr_boss += len(self.__class__.instances.keys())
+        
+        logger.info(f"Instance {self.raccourcis_nom} créee ! ")
+
+        
     #Fonction pour savoir si un combat existe dans l'instance du boss ou non, return True or False
     def recherche_combat_existe_dans_Boss(self, date_essais : str) -> bool:
         """
@@ -579,13 +582,12 @@ def ajout_lien_au_df(lien : str):
     ### Paramètre:
      - Lien (str): Lien dps.report du boss
     """
-
+    logger.debug(f"Début de ajout_lien")
     #Extrait la date du lien
     date_essais = (lien.split('-')[1] + '-' + lien.split('-')[2]).split('_')[0]
 
     #Extrait le raccourcis_boss du lien
     raccourcis_boss = lien.split('_')[1]
-
     #Test si le raccourcis_boss est bien une instance de l'objet Boss()
     if raccourcis_boss in Boss.instances:
         instance = Boss.instances[raccourcis_boss]
@@ -604,7 +606,10 @@ def ajout_lien_au_df(lien : str):
     if combat_present == False:
         logger.info("Boss non trouvé, début de traiterlogs()")
         traiterLogs( lien )
-        Boss(nom_fr, nom_en, raccourcis_boss, Boss.instances[raccourcis_boss].aile) #Recrée l'instance du boss
+        logger.info(f"Actualisation de l'instance {raccourcis_boss}")
+        aile = Boss.instances[raccourcis_boss].aile
+        Boss(nom_fr, nom_en, raccourcis_boss, aile) #Recrée l'instance du boss
+
     elif combat_present == True:
         logger.info(f"Boss trouvé dans l'instance : {raccourcis_boss}")
     else:
